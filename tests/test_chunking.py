@@ -42,7 +42,13 @@ effects of mining."""
 @pytest.fixture
 def mock_model_manager(monkeypatch):
     """Mock ModelManager to return a smart mock model that finds actual entities."""
+    from contextlib import contextmanager
+
     mock_model = MagicMock()
+
+    @contextmanager
+    def mock_adapter_scope(self, model, adapter_name, adapter_id, model_id=None):
+        yield model
 
     # Mock the schema builder chain
     mock_schema = MagicMock()
@@ -51,7 +57,7 @@ def mock_model_manager(monkeypatch):
     mock_model.create_schema.return_value = mock_schema
 
     def side_effect_extract(text, schema=None, include_confidence=True, **kwargs):
-        """Mock implementation of extract returning character offsets and relations for DatasetSchemaV3."""
+        """Mock implementation of extract returning character offsets and relations for DatasetSchema."""
 
         # Find all occurrences of a substring
         def find_all(sub, string):
@@ -224,7 +230,7 @@ def mock_model_manager(monkeypatch):
             end = start + 3
             add_entity("WDI", start, end, acronym_text="WDI", acronym_start=start, acronym_end=end)
 
-        return {"entities": {"name": name_ents}, "relation_extraction": relations}
+        return {"entities": {"named_data": name_ents}, "relation_extraction": relations}
 
     def side_effect_batch_extract(texts, schema=None, include_confidence=True, **kwargs):
         return [side_effect_extract(t, schema, include_confidence, **kwargs) for t in texts]
@@ -363,12 +369,13 @@ def mock_model_manager(monkeypatch):
     mock_model.batch_extract.side_effect = side_effect_batch_extract
     mock_model.extract_json.side_effect = side_effect_extract_json
 
-    def mock_load(self, model_id=None, **kwargs):
+    def mock_load_base(self, model_id=None):
         return mock_model
 
     from ai4data.data_use.models.model_manager import ModelManager
 
-    monkeypatch.setattr(ModelManager, "load", mock_load)
+    monkeypatch.setattr(ModelManager, "load_base", mock_load_base)
+    monkeypatch.setattr(ModelManager, "adapter_scope", mock_adapter_scope)
 
     return ModelManager()
 

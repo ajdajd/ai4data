@@ -6,7 +6,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from ..models.model_manager import ModelManager
-from ..schemas.dataset_schema_v2 import DatasetSchema
+from ..schemas.dataset_schema import (
+    _PURPOSE_ACTION_CONFIDENCE_THRESHOLD,
+    _TYPOLOGY_CONFIDENCE_THRESHOLD,
+    PURPOSE_ACTION_LABELS,
+    DatasetSchema,
+    map_typology,
+)
 from ..utils.document_parser import DocumentParser
 from ..utils.text_normalizer import TextNormalizer
 
@@ -105,6 +111,8 @@ class DatasetExtractor:
         self,
         model_id: Optional[str] = None,
         adapter_id: Optional[str] = None,
+        classification_adapter_id: Optional[str] = "ai4data/datause-impact-v0",
+        relation_adapter_id: Optional[str] = "ai4data/datause-relation-v0",
         threshold: float = 0.3,
         cache_dir: Optional[str] = None,
     ):
@@ -113,36 +121,70 @@ class DatasetExtractor:
         Args:
             model_id: HuggingFace model ID or path to local model.
                      If None, uses default model.
-            adapter_id: HuggingFace adapter repo ID to apply after loading the base model.
+            adapter_id: HuggingFace adapter repo ID for entity extraction (Call 1).
                        If None, falls back to ModelManager.DEFAULT_ADAPTER_ID.
                        Pass an empty string to skip adapter loading entirely.
+            classification_adapter_id: HuggingFace adapter repo ID for classification
+                       (Call 2 -- usage, typology, purpose_action). Defaults to
+                       the fine-tuned purpose_action adapter.
+                       Pass an empty string to skip (zero-shot classification).
+            relation_adapter_id: HuggingFace adapter repo ID for relation extraction
+                       (Call 1b -- has_organization, used_by, has_acronym,
+                       has_timeframe, has_geography). Defaults to the fine-tuned
+                       relation adapter. Pass an empty string to skip (zero-shot
+                       relations via entity model).
             threshold: Default confidence threshold for extraction
             cache_dir: Directory to cache models
         """
         self.model_manager = ModelManager(cache_dir=cache_dir)
         self.model_id = model_id
         self.adapter_id = adapter_id
+        self.classification_adapter_id = classification_adapter_id
+        self.relation_adapter_id = relation_adapter_id
         self.threshold = threshold
         self._model = None
         self._classifier = None
-        # Two cached schemas — one without provenance fields (fast default)
-        # and one with them (richer output). Built lazily on first use.
+        # Cached DatasetSchema instance -- built lazily on first use.
         self._schema_core = None
-        self._schema_provenance = None
 
     @property
     def model(self):
-        """Lazy load the GLiNER2 extraction model."""
+        """Lazy load the shared GLiNER2 base model (no adapter attached)."""
         if self._model is None:
-            self._model = self.model_manager.load(self.model_id, adapter_id=self.adapter_id)
+            self._model = self.model_manager.load_base(self.model_id)
         return self._model
+
+    def _model_scope(self, adapter_name: str, adapter_id: Optional[str]):
+        """Context manager making ``adapter_id`` active on the shared model."""
+        if adapter_id is None:
+            adapter_id = self.model_manager.adapter_id
+        return self.model_manager.adapter_scope(
+            self.model, adapter_name, adapter_id, self.model_id
+        )
+
+    @property
+    def classification_model(self):
+        """The shared base model (adapter is loaded on-the-fly by _model_scope).
+
+        Kept for backward compatibility with code that preloads adapters.
+        """
+        return self.model
+
+    @property
+    def relation_model(self):
+        """The shared base model (adapter is loaded on-the-fly by _model_scope).
+
+        Kept for backward compatibility with code that preloads adapters.
+        """
+        return self.model
 
     @property
     def classifier(self):
-        """Lazy load the BERT page-relevance classifier.
+        """Lazy load the page-relevance classifier.
 
-        Returns a HuggingFace text-classification pipeline. Only loaded the
-        first time this property is accessed (i.e. when use_classifier=True).
+        Returns a ``GLiNERClassifierWrapper`` (GLiNER2 with ``datause-classifier``
+        adapter) that predicts ``WITH_DATA`` or ``NO_DATA``. Only loaded the
+        first time this property is accessed (when ``use_classifier=True``).
         """
         if self._classifier is None:
             self._classifier = self.model_manager.load_classifier()
@@ -150,34 +192,22 @@ class DatasetExtractor:
 
     @property
     def schema(self):
-        """Lazy-build the core schema (no provenance fields).
+        """Lazy-build the DatasetSchema instance.
 
         Kept as a property for backward compatibility with code that
         references extractor.schema directly.
         """
-        return self._build_schema(extract_provenance=False)
+        return self._build_schema()
 
-    def _build_schema(self, extract_provenance: bool = False):
-        """Build and cache the GLiNER2 schema.
+    def _build_schema(self):
+        """Build and cache the DatasetSchema schema.
 
-        Args:
-            extract_provenance: If True, include provenance fields
-                (author, producer, publication_year, etc.) in the schema.
-                The two variants are cached independently.
-
-        Returns:
-            Configured GLiNER2 schema object
+        DatasetSchema is the single canonical schema for the
+        three-model swarm pipeline. Always returned.
         """
-        if extract_provenance:
-            if self._schema_provenance is None:
-                builder = DatasetSchema(threshold=self.threshold)
-                self._schema_provenance = builder.build(self.model, extract_provenance=True)
-            return self._schema_provenance
-        else:
-            if self._schema_core is None:
-                builder = DatasetSchema(threshold=self.threshold)
-                self._schema_core = builder.build(self.model, extract_provenance=False)
-            return self._schema_core
+        if self._schema_core is None:
+            self._schema_core = DatasetSchema(threshold=self.threshold)
+        return self._schema_core
 
     # =========================================================================
     # Markdown-aware chunking helpers
@@ -354,9 +384,10 @@ class DatasetExtractor:
         Prefers markdown-aware boundaries in priority order:
         1. Bold header (``\\n**``) or markdown header (``\\n#``)
         2. Paragraph break (``\\n\\n``)
-        3. Table boundary (before/after a complete table)
-        4. Line break (``\\n``)
-        5. Fallback to target position
+        3. Sentence boundary (``'. '``, ``'? '``, ``'! '``)
+        4. Table boundary (before/after a complete table)
+        5. Line break (``\\n``)
+        6. Fallback to target position
 
         Args:
             text: Full input text
@@ -399,7 +430,14 @@ class DatasetExtractor:
         if idx != -1:
             return search_start + idx + 2  # split after the blank line
 
-        # Priority 3: avoid splitting inside a table
+        # Priority 3: sentence boundary — keeps sentences whole, prevents context
+        # dilution of nested spans (e.g. year "2023" inside "2023 MSNA data")
+        for sent_pat in [". ", "? ", "! "]:
+            idx = search_region.rfind(sent_pat)
+            if idx != -1:
+                return search_start + idx + len(sent_pat)  # split after the punctuation+space
+
+        # Priority 4: avoid splitting inside a table
         if table_boundaries:
             for t_start, t_end in table_boundaries:
                 if t_start < target_pos < t_end:
@@ -409,12 +447,12 @@ class DatasetExtractor:
                     elif t_end < len(text):
                         return t_end + 1
 
-        # Priority 4: line break
+        # Priority 5: line break
         idx = search_region.rfind("\n")
         if idx != -1:
             return search_start + idx + 1
 
-        # Priority 5: fallback
+        # Priority 6: fallback
         return target_pos
 
     def _chunk_text(self, text: str, max_tokens: int = 200, overlap: int = 50) -> List[tuple]:
@@ -422,7 +460,8 @@ class DatasetExtractor:
 
         Uses token counting to determine approximate split points, then snaps
         each split to the nearest markdown structural boundary (headers,
-        paragraph breaks, table edges).
+        paragraph breaks, table edges). Footnote definitions referenced in
+        each chunk are appended for model context.
 
         Args:
             text: Input text to chunk
@@ -434,6 +473,8 @@ class DatasetExtractor:
         Returns:
             List of tuples (chunk_text, char_offset) where char_offset is the
             starting character position of the chunk in the original text.
+            Note: chunk_text may include appended footnotes that extend beyond
+            the offset range (for model context only).
         """
         from gliner2.processor import WhitespaceTokenSplitter
 
@@ -444,7 +485,8 @@ class DatasetExtractor:
         if len(tokens) <= max_tokens:
             return [(text, 0)]
 
-        # Pre-compute table boundaries
+        # Pre-compute footnotes and table boundaries
+        footnotes, _ = self._extract_footnotes(text)
         table_boundaries = self._detect_table_boundaries(text)
 
         chunks = []
@@ -748,14 +790,14 @@ class DatasetExtractor:
         dataset_threshold: Optional[float] = None,
         max_tokens: int = 200,
         enable_chunking: bool = True,
-        use_classifier: bool = False,
+        use_classifier: bool = True,
         model_id: Optional[str] = None,
         apply_heuristics: bool = False,
         normalize_text: bool = True,
-        extract_provenance: bool = False,
         verbose: bool = False,
         _page_label: Optional[str] = None,
         exclude_na_usage: bool = False,
+        parallel: bool = True,
     ) -> Dict[str, Any]:
         """Extract dataset mentions from text.
 
@@ -771,23 +813,28 @@ class DatasetExtractor:
                 training data token distribution)
             enable_chunking: Whether to split long text into chunks (default: True)
             use_classifier: Whether to use two-stage pre-filtering classifier
-                (is_english then BERT) before running GLiNER2 (default: False)
+                (is_english on full text, then per-chunk GLiNER2
+                ``datause-classifier``). Only chunks predicted as WITH_DATA
+                go through the expensive swarm pipeline. This avoids running
+                3 adapter loads + batch_extract on boilerplate chunks such
+                as tables of contents, blank pages, or reference lists
+                (default: True)
             model_id: Optional model ID override for this call (unused by default extractor)
             apply_heuristics: If True, apply heuristic filters to remove likely
                 false positives such as table/figure labels (default: False)
             normalize_text: If True, normalize input text before extraction by
                 fixing hyphenated line breaks and collapsing excessive whitespace.
                 Useful for pymupdf4llm markdown outputs (default: True)
-            extract_provenance: If True, also extract provenance fields
-                (author, producer, publication_year, reference_year,
-                reference_population, geography, description, acronym).
-                Increases inference latency. Defaults to False.
             verbose: If True, print skip messages and progress to stdout (default: False)
             exclude_na_usage: If True, drop mentions where is_used could not be
                 determined (value is None, empty, or 'na'). Precision-oriented;
                 may suppress genuinely ambiguous vague mentions. Default: False.
             _page_label: Optional label for the current page/chunk used in verbose
                 logging (e.g. "page 5"). Internal parameter for extract_from_document.
+            parallel: Deprecated no-op. Call 1 (entity) and Call 1b (relation)
+                share one base model with adapter switching, so they always run
+                sequentially (the GIL serializes threads anyway). Kept for
+                backward compatibility with existing callers.
 
         Returns:
             Dict with 'input_text' and 'datasets' keys containing the original text
@@ -799,14 +846,15 @@ class DatasetExtractor:
         if normalize_text:
             text = self._normalize_input_text(text)
 
-        schema = (
-            custom_schema if custom_schema is not None else self._build_schema(extract_provenance)
-        )
+        schema = custom_schema if custom_schema is not None else self._build_schema()
 
         # Pre-filter: two-stage gate when use_classifier=True.
         #   Stage 1: cheap stopword heuristic — skip non-English pages immediately.
-        #   Stage 2: BERT classifier — skip pages the model predicts have NO_DATA.
-        # Both stages are skipped when use_classifier=False (default).
+        #   Stage 2: per-chunk GLiNER2 ``datause-classifier`` — only chunks
+        #            predicted as WITH_DATA go through the expensive swarm.
+        #            This avoids running 3 adapter loads + batch_extract on
+        #            chunks that have no dataset mentions (tables, boilerplate).
+        # Both stages are skipped when use_classifier=False.
         if use_classifier:
             from ..utils.document_parser import DocumentParser
 
@@ -818,59 +866,327 @@ class DatasetExtractor:
                     print(f"   SKIP {label} (non-English) | preview: {preview!r}")
                 return {"input_text": text, "datasets": [], "skip_reason": "non_english"}
 
-            result = self.classifier(text)
-            if result[0]["label"] == "NO_DATA":
-                if verbose:
-                    label = _page_label or "chunk"
-                    score = result[0]["score"]
-                    logger.debug("SKIP %s (NO_DATA, conf=%.2f)", label, score)
-                    print(f"   SKIP {label} (NO_DATA, conf={score:.2f})")
-                return {"input_text": text, "datasets": [], "skip_reason": "no_data"}
-
         # Chunk text if it exceeds token limit (returns list of (chunk_text, offset) tuples)
         if enable_chunking:
             chunks_with_offsets = self._chunk_text(text, max_tokens=max_tokens, overlap=50)
         else:
             chunks_with_offsets = [(text, 0)]
 
-        if len(chunks_with_offsets) == 1:
-            # Text is short enough, process directly (offset is 0)
-            chunk_text, _ = chunks_with_offsets[0]
-            results = schema.extract_with_classification(
-                chunk_text,
-                self.model,
-                include_confidence=include_confidence,
+        if use_classifier:
+            _data_chunks = []
+            _skipped = 0
+            for chunk_text, offset in chunks_with_offsets:
+                result = self.classifier(chunk_text)
+                if result[0]["label"] == "WITH_DATA":
+                    _data_chunks.append((chunk_text, offset))
+                else:
+                    _skipped += 1
+                    if verbose:
+                        preview = chunk_text[:60].replace("\n", " ")
+                        logger.debug("SKIP chunk (NO_DATA) | preview: %r", preview)
+            if not _data_chunks:
+                if verbose:
+                    label = _page_label or "text"
+                    logger.debug("SKIP %s (all %d chunks are NO_DATA)", label, len(chunks_with_offsets))
+                    print(f"   SKIP {label} (all chunks NO_DATA)")
+                return {"input_text": text, "datasets": [], "skip_reason": "no_data"}
+            if _skipped and verbose:
+                label = _page_label or "text"
+                print(f"   GATE {label}: {len(_data_chunks)}/{len(chunks_with_offsets)} chunks WITH_DATA")
+            chunks_with_offsets = _data_chunks
+
+        # ── Three-model swarm ─────────────
+        # Call 1:  entity extraction (fine‑tuned adapter, entities only).
+        #          Uses _get_entity_schema — no relations, no metadata
+        #          entities.  Fast, high-recall for named/descriptive/vague
+        #          dataset mentions.
+        # Call 1b: relation extraction (fine‑tuned adapter, entities +
+        #          relations).  Extracts has_organization, used_by,
+        #          has_acronym, has_timeframe, has_geography on the full
+        #          chunk text via _get_relation_schema.  Relation heads
+        #          are matched to Call‑1 mentions by span overlap.
+        # Call 2:  classification (fine‑tuned adapter) on deduplicated
+        #          sentence contexts — usage, typology, purpose_action.
+        #          Runs only on named mentions.
+        #
+        # Stage gating:
+        #   - named:      relations + classification
+        #   - descriptive: relations only
+        #   - vague:      no relations, no classification
+        entity_schema = schema._get_entity_schema(self.model)
+        relation_schema = schema._get_relation_schema(self.model)
+        classification_schema = schema._get_classification_schema(self.model)
+
+        chunk_texts = [c for c, _ in chunks_with_offsets]
+        chunk_offsets = [o for _, o in chunks_with_offsets]
+
+        # ── Call 1: entity extraction ──
+        # All three calls share a single base model; the fine-tuned LoRA
+        # adapter is switched on around each call via ModelManager.adapter_scope
+        # (which also serializes access via the class-wide lock).  This avoids
+        # loading three full base-model copies (~4x memory/startup savings) at
+        # the cost of sequential execution — the GIL would serialize the old
+        # threads anyway, so there is no speed regression.
+        with self._model_scope("entity", self.adapter_id):
+            pass1_batch = self.model.batch_extract(
+                chunk_texts,
+                entity_schema,
+                threshold=schema.threshold,
+                include_confidence=True,
                 include_spans=True,
             )
-        else:
-            # Process each chunk and merge results
-            chunk_results = []
-            for chunk_text, chunk_offset in chunks_with_offsets:
-                chunk_result = schema.extract_with_classification(
-                    chunk_text,
-                    self.model,
-                    include_confidence=include_confidence,
-                    include_spans=True,
+        seen_spans: set = set()
+        raw_mentions: list = []
+        for chunk_idx, chunk_result in enumerate(pass1_batch):
+            entities = chunk_result.get("entities", {})
+            typed = (
+                [(e, "named") for e in entities.get("named_data", [])]
+                + [(e, "descriptive") for e in entities.get("descriptive_data", [])]
+                + [(e, "vague") for e in entities.get("vague_data", [])]
+            )
+            for ent, spec in typed:
+                abs_start = ent["start"] + chunk_offsets[chunk_idx]
+                abs_end = ent["end"] + chunk_offsets[chunk_idx]
+                span_key = (abs_start, abs_end)
+                if span_key in seen_spans:
+                    continue
+                name_text = ent.get("text", "").strip()
+                if not name_text or len(name_text) <= 2:
+                    continue
+                if DatasetSchema._is_truncated_name(name_text):
+                    continue
+                seen_spans.add(span_key)
+                raw_mentions.append(
+                    {
+                        "text": name_text,
+                        "confidence": float(ent.get("confidence", 1.0)),
+                        "start": abs_start,
+                        "end": abs_end,
+                        "specificity": spec,
+                        "_chunk_idx": chunk_idx,
+                    }
                 )
 
-                # Adjust indices in this chunk's results
-                if isinstance(chunk_result, dict):
-                    entities = self._get_entities(chunk_result)
-                    seen_ids = set()
-                    for entity in entities:
-                        if isinstance(entity, dict):
-                            self._adjust_entity_indices(entity, chunk_offset, seen_ids)
+        if not raw_mentions:
+            results = []
+        else:
+            raw_mentions = DatasetSchema._nms_name_spans(raw_mentions)
 
-                chunk_results.append(chunk_result)
+            for m in raw_mentions:
+                m["sentence"], m["sentence_offset"] = DatasetSchema._get_sentence_context(
+                    text, m["start"], m["end"]
+                )
+            # Call 2 (classification) runs only on named mentions.  Descriptive
+            # and vague mentions are non-named — they get no usage / typology /
+            # purpose_action (impact) output.
+            named_sentences = [m["sentence"] for m in raw_mentions if m["specificity"] == "named"]
+            unique_named_sentences = list(dict.fromkeys(named_sentences))
+            if unique_named_sentences:
+                with self._model_scope("impact", self.classification_adapter_id):
+                    cls_batch = self.model.batch_extract(
+                        unique_named_sentences,
+                        classification_schema,
+                        threshold=0.1,
+                        include_confidence=True,
+                    )
+                cls_cache = dict(zip(unique_named_sentences, cls_batch))
+            else:
+                cls_cache = {}
 
-            # Merge results from all chunks
-            results = self._merge_chunk_results(chunk_results)
+            # ── Call 1b: relation extraction ──
+            # Runs on the relation adapter if configured; otherwise relations
+            # are left empty (the zero-shot relation model no longer exists as
+            # a separate base-model load — only its adapter).
+            if self.relation_adapter_id:
+                with self._model_scope("relation", self.relation_adapter_id):
+                    pass1b_batch = self.model.batch_extract(
+                        chunk_texts,
+                        relation_schema,
+                        threshold=schema.threshold,
+                        include_confidence=True,
+                        include_spans=True,
+                    )
+            else:
+                pass1b_batch = [{}] * len(chunk_texts)
+
+            rel_by_chunk = {}
+            for chunk_idx, chunk_result_1b in enumerate(pass1b_batch):
+                rel_by_chunk[chunk_idx] = chunk_result_1b.get("relation_extraction", {})
+
+            results = []
+            for m in raw_mentions:
+                sentence = m["sentence"]
+                abs_start = m["start"]
+                abs_end = m["end"]
+                name_text = m["text"]
+                name_conf = m["confidence"]
+                chunk_offset = chunk_offsets[m["_chunk_idx"]]
+
+                chunk_start = max(0, abs_start - chunk_offset)
+                chunk_end = max(chunk_start, abs_end - chunk_offset)
+
+                sent_relations = rel_by_chunk.get(m["_chunk_idx"], {})
+                is_named = m["specificity"] == "named"
+                is_vague = m["specificity"] == "vague"
+
+                rec = {
+                    "mention_name": {
+                        "text": name_text,
+                        "confidence": name_conf,
+                        "start": abs_start,
+                        "end": abs_end,
+                    },
+                    "specificity_tag": m["specificity"],
+                }
+
+                # Relations (Call 1b) run only for named and descriptive
+                # mentions.  Vague mentions get empty relation fields.
+                if is_vague:
+                    for rel_type, field_name in DatasetSchema._FACTUAL_RELATIONS.items():
+                        rec[field_name] = {
+                            "text": "",
+                            "confidence": 0.0,
+                            "start": abs_start,
+                            "end": abs_end,
+                        }
+                else:
+                    for rel_type, field_name in DatasetSchema._FACTUAL_RELATIONS.items():
+                        rel_thresh = DatasetSchema._RELATION_THRESHOLDS.get(
+                            rel_type, self.threshold
+                        )
+                        matched = DatasetSchema._find_best_relation(
+                            sent_relations,
+                            rel_type,
+                            chunk_start,
+                            chunk_end,
+                            head_text=name_text,
+                        )
+                        if matched and float(matched.get("confidence", 0.0)) >= rel_thresh:
+                            tail_text = matched.get("text", "")
+                            if not DatasetSchema._is_valid_relation(rel_type, name_text, tail_text):
+                                rel_text, rel_conf = "", 0.0
+                            elif rel_type in (
+                                "has_organization",
+                                "used_by",
+                            ) and not DatasetSchema._is_valid_org(tail_text):
+                                rel_text, rel_conf = "", 0.0
+                            else:
+                                rel_text = tail_text
+                                rel_conf = float(matched["confidence"])
+                            rel_start = matched["start"] + chunk_offset if rel_text else abs_start
+                            rel_end = matched["end"] + chunk_offset if rel_text else abs_end
+                        else:
+                            rel_start = abs_start
+                            rel_end = abs_end
+                            rel_text = ""
+                            rel_conf = 0.0
+
+                        rec[field_name] = {
+                            "text": rel_text,
+                            "confidence": rel_conf,
+                            "start": rel_start,
+                            "end": rel_end,
+                        }
+
+                # Call 2 (classification / impact) runs only for named mentions.
+                # Descriptive and vague mentions get empty impact fields.
+                if is_named:
+                    fb = cls_cache.get(sentence, {}) or {}
+                    usage_info = fb.get("usage")
+                    typology_info = fb.get("typology")
+                    purpose_action_info = fb.get("purpose_action")
+
+                    if usage_info and isinstance(usage_info, dict):
+                        rec["_usage_match"] = {
+                            "text": usage_info.get("label", "primary"),
+                            "confidence": float(usage_info.get("confidence", 0.0)),
+                        }
+                    else:
+                        rec["_usage_match"] = None
+
+                    text_val = "other"
+                    conf_val = 0.0
+                    if typology_info and isinstance(typology_info, dict):
+                        text_val = typology_info.get("label", "other")
+                        conf_val = float(typology_info.get("confidence", 0.0))
+
+                    if text_val == "other" or conf_val < _TYPOLOGY_CONFIDENCE_THRESHOLD:
+                        mapped = map_typology(name_text)
+                        if mapped != "other":
+                            text_val, conf_val = mapped, 0.0
+
+                    rec["typology_tag"] = {
+                        "text": text_val,
+                        "confidence": conf_val,
+                        "start": abs_start,
+                        "end": abs_end,
+                    }
+
+                    if purpose_action_info and isinstance(purpose_action_info, dict):
+                        rec["_purpose_action_match"] = {
+                            "text": purpose_action_info.get("label", "contextual_reference"),
+                            "confidence": float(purpose_action_info.get("confidence", 0.0)),
+                        }
+                    else:
+                        rec["_purpose_action_match"] = None
+
+                    usage_match = rec.pop("_usage_match", None)
+                    usage_text = ""
+                    usage_conf = 0.0
+                    if usage_match and isinstance(usage_match, dict):
+                        usage_text = usage_match.get("text", "")
+                        usage_conf = float(usage_match.get("confidence", 0.0))
+
+                    rec["usage_context"] = {
+                        "text": usage_text,
+                        "confidence": usage_conf,
+                        "start": abs_start,
+                        "end": abs_end,
+                    }
+
+                    usage_lower = usage_text.strip().lower()
+                    is_used_val = "False" if usage_lower == "background" else "True"
+                    rec["is_used"] = {
+                        "text": is_used_val,
+                        "confidence": usage_conf,
+                        "start": abs_start,
+                        "end": abs_end,
+                    }
+
+                    purpose_info = rec.pop("_purpose_action_match", None)
+                    purpose_text = "contextual_reference"
+                    purpose_conf = 0.0
+                    if purpose_info and isinstance(purpose_info, dict):
+                        cand_text = purpose_info.get("text") or purpose_info.get("label") or ""
+                        cand_conf = float(purpose_info.get("confidence", 0.0))
+                        if (
+                            cand_text in PURPOSE_ACTION_LABELS
+                            and cand_conf >= _PURPOSE_ACTION_CONFIDENCE_THRESHOLD
+                        ):
+                            purpose_text = cand_text
+                            purpose_conf = cand_conf
+                    rec["purpose_action"] = {
+                        "text": purpose_text,
+                        "confidence": purpose_conf,
+                        "start": abs_start,
+                        "end": abs_end,
+                    }
+                else:
+                    empty_impact = {
+                        "text": "",
+                        "confidence": 0.0,
+                        "start": abs_start,
+                        "end": abs_end,
+                    }
+                    rec["usage_context"] = dict(empty_impact)
+                    rec["typology_tag"] = dict(empty_impact)
+                    rec["purpose_action"] = dict(empty_impact)
+                    rec["is_used"] = dict(empty_impact)
+
+                results.append(rec)
 
         # Extract dataset list from results
-        if isinstance(results, dict):
-            datasets = self._get_entities(results)
-        else:
-            datasets = results if isinstance(results, list) else []
+        datasets = results if isinstance(results, list) else []
 
         # Apply dataset_threshold filter if specified
         if dataset_threshold is not None:
@@ -1275,6 +1591,52 @@ class DatasetExtractor:
             filtered.append(ds)
         return filtered
 
+    def _extract_chunk(
+        self,
+        idx: int,
+        chunk: Dict[str, Any],
+        source_str: str,
+        include_confidence: bool,
+        custom_schema: Optional[Any],
+        exclude_non_datasets: bool,
+        dataset_threshold: Optional[float],
+        max_tokens: int,
+        enable_chunking: bool,
+        apply_heuristics: bool,
+        use_classifier: bool,
+        normalize_text: bool,
+        verbose: bool,
+    ) -> Dict[str, Any]:
+        chunk_text = chunk["text"]
+        chunk_pages = chunk["pages"]
+        page_label = f"page {chunk_pages[0] + 1}" if chunk_pages else "chunk"
+
+        extraction_result = self.extract_from_text(
+            chunk_text,
+            include_confidence=include_confidence,
+            custom_schema=custom_schema,
+            exclude_non_datasets=exclude_non_datasets,
+            dataset_threshold=dataset_threshold,
+            max_tokens=max_tokens,
+            enable_chunking=enable_chunking,
+            apply_heuristics=apply_heuristics,
+            use_classifier=use_classifier,
+            normalize_text=normalize_text,
+            verbose=verbose,
+            _page_label=page_label,
+        )
+
+        skip_reason = extraction_result.get("skip_reason")
+        return {
+            "page": chunk_pages[0] if chunk_pages else None,
+            "chunk": idx,
+            "input_text": extraction_result["input_text"],
+            "datasets": extraction_result["datasets"],
+            "classifier_skipped": skip_reason is not None,
+            "skip_reason": skip_reason,
+            "document": {"source": source_str, "pages": chunk_pages},
+        }
+
     def extract_from_document(
         self,
         source: Union[str, Path],
@@ -1290,9 +1652,10 @@ class DatasetExtractor:
         use_classifier: bool = True,
         normalize_text: bool = True,
         skip_references: bool = False,
-        extract_provenance: bool = False,
         verbose: bool = False,
         pages: Optional[List[int]] = None,
+        parallel: bool = True,
+        max_workers: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """Extract dataset mentions from a PDF document.
 
@@ -1317,23 +1680,21 @@ class DatasetExtractor:
                 whitespace. Useful for pymupdf4llm markdown outputs (default: False)
             skip_references: If True, skip pages after a references/appendix section
                 is detected in the second half of the document (default: False)
-            extract_provenance: If True, also extract provenance fields
-                (author, producer, publication_year, reference_year,
-                reference_population, geography, description, acronym).
-                Increases inference latency. Defaults to False.
             verbose: If True, print logging when references are detected and pages
                 are skipped (default: False)
             pages: Optional list of 0-indexed page numbers to include. If None,
                    processes all pages.
+            parallel: If True, process chunks concurrently using a thread pool
+                (default: True). Falls back to sequential on error.
+            max_workers: Maximum number of worker threads for parallel processing.
+                If None, uses ThreadPoolExecutor default (min(32, os.cpu_count() + 4)).
 
         Returns:
             List of extracted dataset mentions with metadata including page numbers,
             source document, and page text (if include_metadata=True)
         """
-        # Convert source to string for metadata
         source_str = str(source)
 
-        # Load PDF in chunks with page tracking
         chunks = DocumentParser.load_pdf_chunks(
             source_str,
             n_pages=n_pages,
@@ -1342,58 +1703,94 @@ class DatasetExtractor:
             pages=pages,
         )
 
-        # Extract from each chunk and aggregate results
-        all_results = []
-        skipped_classifier = []
         if verbose:
             logger.debug(
                 "Processing %d chunk(s) with use_classifier=%s", len(chunks), use_classifier
             )
             print(f"\n   Processing {len(chunks)} chunk(s) with use_classifier={use_classifier}")
 
-        for chunk in chunks:
-            chunk_text = chunk["text"]
-            chunk_pages = chunk["pages"]
-            page_label = f"page {chunk_pages[0] + 1}" if chunk_pages else "chunk"
+        all_results = []
+        skipped_classifier = []
 
-            # Extract from this chunk (returns dict with 'input_text' and 'datasets')
-            extraction_result = self.extract_from_text(
-                chunk_text,
-                include_confidence=include_confidence,
-                custom_schema=custom_schema,
-                exclude_non_datasets=exclude_non_datasets,
-                dataset_threshold=dataset_threshold,
-                max_tokens=max_tokens,
-                enable_chunking=enable_chunking,
-                apply_heuristics=apply_heuristics,
-                use_classifier=use_classifier,
-                normalize_text=normalize_text,
-                extract_provenance=extract_provenance,
-                verbose=verbose,
-                _page_label=page_label,
-            )
+        if parallel and len(chunks) > 1:
+            _ = self.model
+            _ = self.relation_model
+            _ = self.classification_model
 
-            input_text = extraction_result["input_text"]
-            datasets_extracted = extraction_result["datasets"]
+            from concurrent.futures import ThreadPoolExecutor, as_completed
 
-            # Track classifier-skipped pages for summary.
-            # extract_from_text embeds a skip_reason key when it short-circuits.
-            skip_reason = extraction_result.get("skip_reason")
-            classifier_skipped = skip_reason is not None
-            if classifier_skipped:
-                skipped_classifier.extend(chunk_pages)
-
-            document_metadata = {"source": source_str, "pages": chunk_pages}
-            all_results.append(
-                {
-                    "page": chunk_pages[0] if chunk_pages else None,
-                    "input_text": input_text,
-                    "datasets": datasets_extracted,
-                    "classifier_skipped": classifier_skipped,
-                    "skip_reason": skip_reason,
-                    "document": document_metadata,
+            results_map = {}
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {
+                    executor.submit(
+                        self._extract_chunk,
+                        i,
+                        chunk,
+                        source_str,
+                        include_confidence,
+                        custom_schema,
+                        exclude_non_datasets,
+                        dataset_threshold,
+                        max_tokens,
+                        enable_chunking,
+                        apply_heuristics,
+                        use_classifier,
+                        normalize_text,
+                        verbose,
+                    ): i
+                    for i, chunk in enumerate(chunks)
                 }
-            )
+                for future in as_completed(futures):
+                    idx = futures[future]
+                    try:
+                        results_map[idx] = future.result()
+                    except Exception as exc:
+                        logger.warning(
+                            "Parallel extraction failed for chunk %d: %s. Falling back to sequential.",
+                            idx,
+                            exc,
+                        )
+                        results_map[idx] = self._extract_chunk(
+                            idx,
+                            chunks[idx],
+                            source_str,
+                            include_confidence,
+                            custom_schema,
+                            exclude_non_datasets,
+                            dataset_threshold,
+                            max_tokens,
+                            enable_chunking,
+                            apply_heuristics,
+                            use_classifier,
+                            normalize_text,
+                            verbose,
+                        )
+
+            for i in range(len(chunks)):
+                result = results_map[i]
+                all_results.append(result)
+                if result.get("classifier_skipped"):
+                    skipped_classifier.extend(chunks[i]["pages"])
+        else:
+            for i, chunk in enumerate(chunks):
+                result = self._extract_chunk(
+                    i,
+                    chunk,
+                    source_str,
+                    include_confidence,
+                    custom_schema,
+                    exclude_non_datasets,
+                    dataset_threshold,
+                    max_tokens,
+                    enable_chunking,
+                    apply_heuristics,
+                    use_classifier,
+                    normalize_text,
+                    verbose,
+                )
+                all_results.append(result)
+                if result.get("classifier_skipped"):
+                    skipped_classifier.extend(chunk["pages"])
 
         if verbose:
             total_pages = sum(len(c["pages"]) for c in chunks)
@@ -1416,11 +1813,12 @@ class DatasetExtractor:
         texts: List[str],
         include_confidence: bool = True,
         custom_schema: Optional[Any] = None,
-        use_classifier: bool = False,
+        use_classifier: bool = True,
         apply_heuristics: bool = False,
         exclude_non_datasets: bool = True,
-        extract_provenance: bool = False,
         verbose: bool = False,
+        parallel: bool = True,
+        max_workers: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """Extract dataset mentions from multiple texts.
 
@@ -1428,25 +1826,71 @@ class DatasetExtractor:
             texts: List of input texts
             include_confidence: Whether to include confidence scores
             custom_schema: Custom schema to use instead of default
-            use_classifier: Whether to use two-stage pre-filtering classifier (default: False)
+            use_classifier: Whether to use two-stage pre-filtering classifier (default: True)
             apply_heuristics: If True, apply heuristic filters (default: False)
             exclude_non_datasets: If True, filter out non-dataset tagged entries (default: True)
             verbose: If True, print skip messages (default: False)
+            parallel: If True, process texts concurrently using a thread pool
+                (default: True). Falls back to sequential on error.
+            max_workers: Maximum number of worker threads for parallel processing.
+                If None, uses ThreadPoolExecutor default.
 
         Returns:
             List of dicts, each containing 'input_text' and 'datasets' for each input text
         """
-        results = []
-        for text in texts:
-            result = self.extract_from_text(
-                text,
-                include_confidence=include_confidence,
-                custom_schema=custom_schema,
-                use_classifier=use_classifier,
-                apply_heuristics=apply_heuristics,
-                exclude_non_datasets=exclude_non_datasets,
-                extract_provenance=extract_provenance,
-                verbose=verbose,
-            )
-            results.append(result)
+        if parallel and len(texts) > 1:
+            _ = self.model
+            _ = self.relation_model
+            _ = self.classification_model
+
+            from concurrent.futures import ThreadPoolExecutor, as_completed
+
+            results_map = {}
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {
+                    executor.submit(
+                        self.extract_from_text,
+                        text,
+                        include_confidence=include_confidence,
+                        custom_schema=custom_schema,
+                        use_classifier=use_classifier,
+                        apply_heuristics=apply_heuristics,
+                        exclude_non_datasets=exclude_non_datasets,
+                        verbose=verbose,
+                    ): i
+                    for i, text in enumerate(texts)
+                }
+                for future in as_completed(futures):
+                    idx = futures[future]
+                    try:
+                        results_map[idx] = future.result()
+                    except Exception as exc:
+                        logger.warning(
+                            "Parallel batch extraction failed for text %d: %s. Falling back to sequential.",
+                            idx,
+                            exc,
+                        )
+                        results_map[idx] = self.extract_from_text(
+                            texts[idx],
+                            include_confidence=include_confidence,
+                            custom_schema=custom_schema,
+                            use_classifier=use_classifier,
+                            apply_heuristics=apply_heuristics,
+                            exclude_non_datasets=exclude_non_datasets,
+                            verbose=verbose,
+                        )
+            results = [results_map[i] for i in range(len(texts))]
+        else:
+            results = []
+            for text in texts:
+                result = self.extract_from_text(
+                    text,
+                    include_confidence=include_confidence,
+                    custom_schema=custom_schema,
+                    use_classifier=use_classifier,
+                    apply_heuristics=apply_heuristics,
+                    exclude_non_datasets=exclude_non_datasets,
+                    verbose=verbose,
+                )
+                results.append(result)
         return results
