@@ -71,7 +71,6 @@
 /cookbook/data-snapshot-end-to-end/roadmap
 /cookbook/data-snapshot-end-to-end/snapshots
 /cookbook/data-snapshot-end-to-end/standards
-/cookbook/data-snapshot-end-to-end/start-here
 /cookbook/evaluation-suites
 /cookbook/evaluation-suites/answers
 /cookbook/evaluation-suites/contributing
