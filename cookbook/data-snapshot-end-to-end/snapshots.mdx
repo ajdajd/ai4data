@@ -51,7 +51,7 @@ python -m ai4data.data_snapshot.extract_data_snapshot \
   --device=cpu
 ```
 
-If a compatible NVIDIA GPU and CUDA runtime are available, `--device=cuda:0` may be used instead of `--device=cpu`. The recorded example uses CPU. An unavailable CUDA device causes an error; there is no automatic CPU fallback.
+If a compatible NVIDIA GPU and CUDA runtime are available, select GPU inference with `--device=cuda:0`. The recorded example uses CPU. An unavailable CUDA device causes an error; there is no automatic CPU fallback.
 
 1. Use a fresh destination so that an earlier file does not cause the entire PDF to be skipped.
 2. Run the command and inspect progress and printed paths. A directory can also be passed to the `--input` parameter which will search recursively for PDFs.
