@@ -1,0 +1,118 @@
+---
+id: combined
+title: "5. Combined execution and output structure"
+sidebar_label: "5. Combined execution and output structure"
+sidebar_position: 5
+description: This chapter explains how are both stages invoked together.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 5. Combined execution and output structure
+
+**Question:** How are both stages invoked together?
+
+## Rationale
+
+The combined command first extracts crops and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
+
+The combined example here is supported by the implementation but deliberately unexecuted. Its directory tree illustrates expected naming and stage relationships. The recorded evidence in this guide comes from snapshot-only extraction and the two selected metadata-only requests.
+
+## Target state
+
+- The reader can identify the combined entry point and its cost implications.
+- Expected combined output is distinguished from recorded example artifacts.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
+| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
+| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+
+:::info[Running example]
+This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+:::
+
+## Recipes
+
+<Recipe title="5.1 Prepare a combined invocation" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The reader has a supported command and a fresh destination.
+
+A fresh destination matters because PDF-level skip logic applies before metadata extraction. The following invocation is an instruction for readers; it was not executed for the cookbook.
+
+```bash
+python -m ai4data.data_snapshot \
+  --input=data/policy_brief_on_shona_community_from_stateless_to_citizens.pdf \
+  --output-dir=output/shona-combined --model=doclayoutyolo --device=cpu \
+  --metadata-provider=openrouter
+```
+
+1. Confirm that the source can be sent as extracted images to the provider and that the crop volume is acceptable.
+2. Use a new output root and record the configuration. GPU selection changes local detection. The provider operates the metadata service.
+3. After execution, check every saved crop and metadata record. A detector false positive can also incur a metadata request.
+
+**Worked example.** The guide does not execute this command. If a run reproduces the observed eight crops and every metadata request succeeds, the output would have eight PNGs and eight JSONs, including a record for the photograph. This is a conditional expectation; only the selected two-image requests were performed.
+
+**What this does not do.** The combined command is not transactional. Extraction errors can prevent metadata processing; metadata errors stop at the failing image while earlier files remain.
+
+</Recipe>
+
+<Recipe title="5.2 Read the expected directory layout" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The relationship between crop and metadata filenames is explicit.
+
+The expected structure below is abbreviated to the two target artifacts. Other detections would also appear. The observed crop filenames are used, but the complete combined result has not been generated.
+
+```text
+output/shona-combined/doclayoutyolo/
+├── snapshots/
+│   ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png
+│   └── policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png
+└── metadata/
+    ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json
+    └── policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json
+```
+
+1. Match files by their complete stems because source names can contain underscores.
+2. Inspect missing JSON as a possible incomplete metadata stage. The PNG may still be valid.
+3. Page coordinates and provider usage logs are not written in this tree.
+
+**Worked example.** The actual staged exercise has all eight detector crops in the local run directory but metadata for only the selected chart and table. The downloadable folder contains those selected pairs, the source-page image, and the inspection helper. Neither folder is claimed to be a complete combined run.
+
+**What this does not do.** A directory tree is a format illustration. It does not establish detection coverage, metadata completeness, or successful execution.
+
+</Recipe>
+
+## Implementation options
+
+Python callers can use `run_pipeline(input_path, output_dir, model_name="doclayoutyolo", device="cpu", metadata_provider="openrouter")`. It returns new snapshot paths followed by metadata paths. A fully skipped PDF command returns no new paths. Use the separate commands when a curator needs to select crops before incurring metadata costs.
+
+## Resources
+
+- The [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) documents installation, supported commands, and Python interfaces.
+- The [schema reference](/docs/data-snapshots/metadata-schema/) explains the metadata fields and validation boundaries.
+- The [benchmark paper](https://arxiv.org/html/2606.06242v1) defines analytical snapshots and reports detection and spatial evaluation.
+
+## Common mistakes
+
+- Running combined execution after snapshot-only in the same root skips the PDF and leaves missing JSON unfilled.
+- Treating a schematic tree as recorded output invents evidence.
+- Expecting a combined run to filter out photographs adds a stage that does not exist.
+
+## Verification
+
+- The combined example is labelled as unexecuted.
+- The output root is distinct from the snapshot-only exercise.
+- The reader understands that all new crops would receive metadata requests.
+
+## Checklist
+
+<Checklist id="data-snapshot-end-to-end-combined" items={[
+  "The combined example is labelled as unexecuted.",
+  "The output root is distinct from the snapshot-only exercise.",
+  "The reader understands that all new crops would receive metadata requests."
+]} />

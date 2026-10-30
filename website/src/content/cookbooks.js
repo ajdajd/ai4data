@@ -5,6 +5,17 @@ import {isHiddenCookbook, isHiddenPath, isIndexedCookbook} from './visibility';
 // website/cookbook-visibility.json are dropped from every list exported here.
 export const allCookbooks = [
   {
+    id: 'data-snapshot-end-to-end',
+    version: '0.1',
+    date: 'October 2026',
+    audience: 'Developers and data curators working with institutional PDFs',
+    title: 'Practical Guide to the Data Snapshot End-to-End Workflow',
+    description:
+      'Eight chapters cover PDF preparation, model selection, snapshot extraction, semantic metadata, combined execution, output review, safe recovery, and a proposed improvement roadmap, using actual Shona policy-brief crops and two selected metadata requests.',
+    chapters: 8,
+    to: '/cookbook/data-snapshot-end-to-end/',
+  },
+  {
     id: 'ai-ready-dissemination',
     version: '0.1',
     date: 'October 2026',
@@ -183,7 +194,7 @@ export function cookbookPage(pathname) {
 const allGroups = [
   {
     title: 'Data products that AI can use',
-    ids: ['ai-ready-dissemination', 'microdata-documentation', 'data-from-documents', 'ml-ready-datasets'],
+    ids: ['ai-ready-dissemination', 'microdata-documentation', 'data-from-documents', 'data-snapshot-end-to-end', 'ml-ready-datasets'],
   },
   {
     title: 'Metadata and interfaces',

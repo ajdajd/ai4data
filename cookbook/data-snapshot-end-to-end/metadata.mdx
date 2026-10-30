@@ -1,0 +1,142 @@
+---
+id: metadata
+title: "4. Semantic metadata extraction"
+sidebar_label: "4. Semantic metadata extraction"
+sidebar_position: 4
+description: This chapter explains how is a crop described in structured metadata.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 4. Semantic metadata extraction
+
+**Question:** How is a crop described in structured metadata?
+
+## Rationale
+
+The metadata stage uses a vision-language model, which processes an image together with text instructions. The production prompt asks for evidence visible in that image and excludes filenames and parent-document metadata. Its response is validated against the canonical Data Snapshot Metadata Schema v1.4 before a JSON file is saved.
+
+Metadata fields describe analytical meaning: measured variables, their units, grouping dimensions, temporal coverage, visible sources, and related context. They do not hold a reconstructed numerical dataset. Missing and null fields represent unavailable information; validation cannot establish that the model interpreted the image correctly.
+
+## Target state
+
+- Exactly one selected figure and one selected table have corresponding metadata records.
+- The reader can validate and interpret each record without treating it as transcribed data.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
+| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
+| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+
+:::info[Running example]
+This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+:::
+
+## Recipes
+
+<Recipe title="4.1 Generate metadata for selected crops" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** Each selected image has one validated JSON record.
+
+Using an individual image as input keeps the paid example bounded. The following two commands send the reviewed figure and table separately. The explicit output directory avoids assumptions about directory naming.
+
+```bash
+python -m ai4data.data_snapshot.extract_metadata \
+  --input=output/cookbook-shona/doclayoutyolo/snapshots/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png \
+  --output-dir=output/cookbook-shona/doclayoutyolo/metadata \
+  --metadata-provider=openrouter
+```
+
+```bash
+python -m ai4data.data_snapshot.extract_metadata \
+  --input=output/cookbook-shona/doclayoutyolo/snapshots/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png \
+  --output-dir=output/cookbook-shona/doclayoutyolo/metadata \
+  --metadata-provider=openrouter
+```
+
+1. Review the selected provider preset and key before running the commands.
+2. Submit only the two selected crops. Passing the whole `snapshots` directory instead would process every discovered image, including the cover photograph.
+3. Check that each JSON basename exactly matches its PNG basename. The final JSON contains the metadata record. API response details are available separately through the Python API.
+4. Preserve the raw model records and keep human review notes separately.
+
+**Worked example.** The downloadable figure and table JSON files are raw outputs from separate metadata-only requests on the actual DocLayout-YOLO crops. The combined command was not run. The review observations below describe their limitations; the raw JSON is unchanged.
+
+**What this does not do.** Requests consume provider credits even when a result is unsuitable. No automatic retry or correction is applied. Existing JSON files are skipped without revalidation.
+
+</Recipe>
+
+<Recipe title="4.2 Validate and interpret a metadata record" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The JSON representation is checked and its populated fields are understood.
+
+The helper below reads one local JSON file, validates it with the production Pydantic model, and displays only populated fields. It changes no files and makes no network requests.
+
+```python file=../../website/static/cookbook-files/data-snapshot-end-to-end/inspect_metadata.py
+```
+
+```bash
+python inspect_metadata.py policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json
+```
+
+1. Download the helper and selected JSON into the same working directory and run the command.
+2. Inspect `variables` for measured concepts and units, `dimensions` for population groups or year columns, and `visualization_types` for the represented form.
+3. Distinguish source wording in `source_text` from a controlled representation in `normalized_value`. A normalized interpretation must not be passed off as printed wording.
+4. Open the full [figure JSON](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json) and [table JSON](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json). Compare them with the actual crops and the [schema reference](/docs/data-snapshots/metadata-schema/).
+
+**Worked example.** The figure record identifies employed and unemployed populations and the two population groups. Its `title` is `Percent of population`, which is visibly the vertical-axis label. The chart caption is outside the crop. The record can validate while this field remains questionable. The model's geographical coverage is null; the document's Kenya context was not provided as extra evidence.
+
+The recorded responses can be inspected below without running the provider again. Both blocks are imported from the downloadable raw JSON files.
+
+<details>
+<summary>Recorded figure metadata</summary>
+
+```json file=../../website/static/cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json
+```
+
+</details>
+
+<details>
+<summary>Recorded table metadata</summary>
+
+```json file=../../website/static/cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json
+```
+
+</details>
+
+**What this does not do.** A structurally valid empty or sparse record may still be unhelpful. The `provenance` field records image-visible sources and credited agents. Source PDF paths, bounding boxes, and extraction history require a separate record.
+
+</Recipe>
+
+## Implementation options
+
+The top-level Python `extract_metadata(image_path, config_path=...)` returns an `ExtractionResult` with diagnostics, response status, usage when returned, and validated metadata. A custom config path is supported there even though the CLI chooses packaged presets. The schema's version is exported schema metadata and is not required in individual records.
+
+## Resources
+
+- The [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) documents installation, supported commands, and Python interfaces.
+- The [schema reference](/docs/data-snapshots/metadata-schema/) explains the metadata fields and validation boundaries.
+- The [benchmark paper](https://arxiv.org/html/2606.06242v1) defines analytical snapshots and reports detection and spatial evaluation.
+
+## Common mistakes
+
+- Substituting the existing human-reviewed gold chart record would hide the production crop and model behavior.
+- Equating schema validation with factual verification leaves interpretation errors undetected.
+- Filling image-invisible context from the PDF without labelling the intervention breaks the stated evidence boundary.
+
+## Verification
+
+- Both selected JSON files validate with the production model.
+- The figure title is flagged for human review and the raw response is preserved.
+- Raw model output and reviewed reference metadata are clearly distinguished.
+
+## Checklist
+
+<Checklist id="data-snapshot-end-to-end-metadata" items={[
+  "Both selected JSON files validate with the production model.",
+  "The figure title is flagged for human review and the raw response is preserved.",
+  "Raw model output and reviewed reference metadata are clearly distinguished."
+]} />

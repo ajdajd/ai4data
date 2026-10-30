@@ -1,0 +1,103 @@
+---
+id: review
+title: "6. Crop and metadata review"
+sidebar_label: "6. Crop and metadata review"
+sidebar_position: 6
+description: This chapter explains are the extracted outputs fit for use.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 6. Crop and metadata review
+
+**Question:** Are the extracted outputs fit for use?
+
+## Rationale
+
+A useful review asks two separate questions: whether the crop preserves the analytical artifact, and whether the metadata accurately describes the available evidence. A schema check answers neither question on its own. Detection can find the right region while excluding the title, or can find a photograph that is irrelevant to analytical extraction.
+
+Review should preserve the distinction between raw outputs and human decisions. A curator can reject a candidate, request a revised crop, or correct metadata, but the original output and the reason for intervention must remain traceable. The package currently provides files for this process. A built-in review application is not implemented.
+
+## Target state
+
+- The selected artifacts have documented crop and metadata limitations.
+- Review decisions remain separate from unmodified raw model records.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
+| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
+| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+
+:::info[Running example]
+This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+:::
+
+## Recipes
+
+<Recipe title="6.1 Compare candidates with the PDF page" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The curator identifies missing context and irrelevant detections.
+
+A review of saved files alone cannot discover every missed artifact. The source page is needed to count relevant regions and inspect their boundaries. Detection precision concerns accepted analytical candidates; recall concerns analytical artifacts that should have been found.
+
+1. Compare all source pages with the crop inventory when assessing coverage. Inspect the selected page at [full size](pathname:///cookbook-files/data-snapshot-end-to-end/shona-page-4.webp).
+2. Check titles, row and column headings, scales, legends, footnotes, and sources for truncation or omission.
+3. Identify irrelevant candidates, split composites, merged adjacent artifacts, and small analytical regions removed by filtering.
+4. Record accept, reject, or revise decisions with a reason. Do not rename a false positive to make the raw output appear correct.
+
+**Worked example.** The Shona cover photograph is labelled `figure` by the layout detector, yet it is not an analytical data snapshot. On PDF page 4, the selected chart and table are analytical, but their captions lie outside the crops. Both limitations were observed in the recorded run.
+
+**What this does not do.** A review of this single PDF does not yield a transferable precision or recall estimate. The detection benchmark evaluates layout extraction. The current metadata provider requires separate evaluation.
+
+</Recipe>
+
+<Recipe title="6.2 Audit metadata against visible evidence" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** Fields that need human adjudication are recorded explicitly.
+
+The image boundary determines what the model can observe. A document title, country, date, or source outside that boundary should not be silently supplied as though it was extracted from the crop. External document context can be retained in a separate, clearly sourced record.
+
+1. Run the metadata validator before semantic review so that representation errors are separated from interpretation problems.
+2. Check each non-null field against the crop, especially titles, units, percentages, time ranges, and roles.
+3. Record whether an absent field reflects missing context, model omission, or a genuinely inapplicable concept.
+4. Keep proposed corrections in the review notes. Publish a corrected reference only with its review status and derivation stated.
+
+**Worked example.** The figure's raw metadata assigns the axis label `Percent of population` to `title`. A curator should flag it as an inappropriate title and note that the actual caption is outside the crop. The existing Shona gold example in the [schema reference](/docs/data-snapshots/metadata-schema/) describes a different, human-reviewed artifact and must not replace this response without disclosure.
+
+**What this does not do.** The helper cannot adjudicate semantic roles or verify external registries. Numerical observations are outside the schema and this cookbook.
+
+</Recipe>
+
+## Implementation options
+
+A file-based review record is sufficient for this exercise. Formal evaluation can use the separate experimental annotation and evaluation tooling with reviewed page boxes; that research environment is not an additional production CLI feature. Numerical extraction and verification are later steps in the [document cookbook](/cookbook/data-from-documents/).
+
+## Resources
+
+- The [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) documents installation, supported commands, and Python interfaces.
+- The [schema reference](/docs/data-snapshots/metadata-schema/) explains the metadata fields and validation boundaries.
+- The [benchmark paper](https://arxiv.org/html/2606.06242v1) defines analytical snapshots and reports detection and spatial evaluation.
+
+## Common mistakes
+
+- Reviewing only successful crops conceals missed artifacts.
+- Correcting the downloaded raw JSON without preserving its original destroys the model-output evidence.
+- Treating a null country field as an error ignores the image-only contract.
+
+## Verification
+
+- The photograph is distinguished from analytical snapshots.
+- Caption omissions are recorded for both selected crops.
+- Questionable metadata fields have explicit human review notes.
+
+## Checklist
+
+<Checklist id="data-snapshot-end-to-end-review" items={[
+  "The photograph is distinguished from analytical snapshots.",
+  "Caption omissions are recorded for both selected crops.",
+  "Questionable metadata fields have explicit human review notes."
+]} />

@@ -1,0 +1,109 @@
+---
+id: operation
+title: "7. Recovery and controlled execution"
+sidebar_label: "7. Recovery and controlled execution"
+sidebar_position: 7
+description: This chapter explains how can the pipeline be operated reliably.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 7. Recovery and controlled execution
+
+**Question:** How can the pipeline be operated reliably?
+
+## Rationale
+
+The package has conservative skip rules and destructive forced replacement. These rules prevent accidental overwrites during ordinary reruns, but they do not prove that an existing run is complete. A single matching output is enough to skip a PDF, and an existing metadata JSON is skipped without checking whether it is valid.
+
+Operational reliability therefore depends on checking output completeness and choosing the right stage for recovery. Requests are sequential, retries are disabled, and the metadata writer stops after the first failed image. Earlier crops and completed JSON records remain available for inspection and selective continuation.
+
+## Target state
+
+- The operator can recover missing metadata without rerunning detection.
+- The run configuration and cost boundaries are retained.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
+| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
+| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+
+:::info[Running example]
+This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+:::
+
+## Recipes
+
+<Recipe title="7.1 Resume or replace the correct stage" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The operator can rerun a stage without confusing skip and replacement behavior.
+
+The correct recovery command depends on which files already exist. A fresh output root is the safest way to compare a changed detector or configuration while preserving an earlier run.
+
+| Command | Ordinary rerun | Forced rerun |
+|---|---|---|
+| Snapshot-only | Skips a PDF if any matching crop or metadata exists. | Deletes matching crops and metadata, then extracts crops. |
+| Combined | Uses the same PDF-level skip rule. | Deletes matching crops and metadata, then runs both stages. |
+| Metadata-only | Skips each image with an existing JSON. | Deletes that JSON before attempting replacement and preserves the image. |
+
+1. Inspect missing or invalid records before choosing a command. A successful skip is not a completeness check.
+2. Use metadata-only execution on missing selected records after a metadata failure. A `snapshots` directory or an image directly inside it defaults to the sibling `metadata` directory.
+3. Use a new destination when comparing settings. If replacement is intended, preserve any needed previous results before `--force`.
+4. Expect forced deletion to occur before model loading or replacement succeeds. Failure does not restore the old files.
+
+**Worked example.** After the snapshot-only Shona run, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in chapter 4 are the appropriate way to enrich selected images. The remaining crops intentionally have no metadata.
+
+**What this does not do.** The package does not automatically resume missing pages, retry failed requests, or maintain a job ledger. An empty-detection PDF has no completion marker and can be processed again.
+
+</Recipe>
+
+<Recipe title="7.2 Record settings and bound paid work" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** A future reader can identify the configuration and the operator can limit request volume.
+
+The source links and worked examples in this guide state what was processed and which settings were used.
+
+1. Note the source publication, detector, device, DPI, metadata model, and selected outputs alongside the example.
+2. Inspect and select crops before paid metadata extraction. Per-image commands bound the number of attempts; the combined command does not offer a spending cap or candidate selection.
+3. Record actual provider billing separately if cost measurements are needed. Token usage is available through the Python `ExtractionResult` when returned by the provider, but ordinary JSON output files do not retain it.
+4. Check the provider preset before a rerun. Changing the model or its settings can change its response and billing.
+
+**Worked example.** This guide uses one local detector run and successful metadata requests for only the selected figure and table. It reports no monetary cost estimate. The combined invocation is unexecuted and the other detectors are instructions, so those paths incur no demonstration charges.
+
+**What this does not do.** The workflow has no total-token or monetary enforcement switch and cannot guarantee identical future model responses.
+
+</Recipe>
+
+## Implementation options
+
+The Python metadata API returns structured errors, including incomplete-response details where available. The batch writer saves validated JSON through a temporary file and replacement, but this does not make an entire PDF job atomic. Preserve failed-request diagnostics separately when operating beyond this small exercise.
+
+## Resources
+
+- The [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) documents installation, supported commands, and Python interfaces.
+- The [schema reference](/docs/data-snapshots/metadata-schema/) explains the metadata fields and validation boundaries.
+- The [benchmark paper](https://arxiv.org/html/2606.06242v1) defines analytical snapshots and reports detection and spatial evaluation.
+
+## Common mistakes
+
+- Using --force to fill missing metadata needlessly deletes working crops.
+- Assuming skipped JSON is valid hides corrupted or obsolete records.
+- Publishing a dollar estimate without billing evidence confuses configuration limits with measured cost.
+
+## Verification
+
+- Recovery uses the correct stage and preserves needed prior outputs.
+- Source, detector settings, and metadata preset are identified.
+- Only selected crops are submitted in the paid example.
+
+## Checklist
+
+<Checklist id="data-snapshot-end-to-end-operation" items={[
+  "Recovery uses the correct stage and preserves needed prior outputs.",
+  "Source, detector settings, and metadata preset are identified.",
+  "Only selected crops are submitted in the paid example."
+]} />

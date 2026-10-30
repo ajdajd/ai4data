@@ -1,0 +1,107 @@
+---
+id: preparation
+title: "1. Environment and source documents"
+sidebar_label: "1. Environment and source documents"
+sidebar_position: 1
+description: This chapter explains what must be prepared before extraction.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 1. Environment and source documents
+
+**Question:** What must be prepared before extraction?
+
+## Rationale
+
+A data snapshot is a bounded region of a document page containing information that can be interpreted analytically or reused operationally. Statistical tables, charts, analytical maps, and monitoring dashboards can qualify. A photograph, logo, or formatting table can be a layout object without being a useful data snapshot. A complete snapshot may need its title, legend, units, caption, or notes to remain understandable.
+
+The production package renders PDF pages, detects candidate regions, and saves crops. A separate vision-language model describes the image in structured semantic metadata. These stages produce images and descriptions. Numerical observations still require a separate extraction and verification workflow. Source documents and run settings must be retained so that a curator can assess the result.
+
+## Target state
+
+- The source PDF is available locally and its origin is recorded.
+- An isolated Python environment contains only the detector and metadata dependencies needed for the exercise.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
+| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
+| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+
+:::info[Running example]
+This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+:::
+
+## Recipes
+
+<Recipe title="1.1 Prepare the Shona policy brief" level="Foundational" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The organization has a local PDF and a source identity that can be checked.
+
+The running document is *From Stateless to Citizens: The Journey of Shona in Kenya*, an institutional policy brief with twelve PDF pages. PDF page 4 contains Figure 1 on labor-force status and Table 1 on demographic characteristics. The cookbook provides selected derived examples; it does not bundle the full PDF or grant rights to redistribute source materials.
+
+1. Open the [ReliefWeb report](https://reliefweb.int/report/kenya/policy-brief-stateless-citizens-journey-shona-community-kenya) and obtain the [PDF attachment](https://reliefweb.int/attachments/831aca28-6777-4cb9-9b84-8976c63061fb/Policy%20Brief%20on%20Shona%20community_From%20Stateless%20to%20Citizens.pdf).
+2. Save it in a local `data/` directory as `policy_brief_on_shona_community_from_stateless_to_citizens.pdf`. The commands below run from the repository root and assume this name. A local filename can differ from its publisher's download name.
+3. Confirm that the local PDF has twelve pages and contains the selected chart and table on PDF page 4.
+4. Open PDF page 4 and identify both target artifacts before interpreting detector output.
+
+**Worked example.** The recorded extraction used a pre-existing local copy of this twelve-page PDF. The source links above identify the publication, and both selected artifacts appear on PDF page 4. Readers obtain their own copy from the publisher.
+
+**What this does not do.** A source URL does not establish redistribution permission or guarantee that a publisher keeps the attachment unchanged.
+
+</Recipe>
+
+<Recipe title="1.2 Install the selected stages" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+
+**Result:** The Python environment can import the workflow and expose its command help.
+
+Python 3.11 or later is required. From a checkout of the repository, the following installation includes DocLayout-YOLO and the metadata SDK. A base `ai4data` installation does not supply all optional dependencies.
+
+```bash
+python -m pip install ".[data-snapshot,data-snapshot-metadata]"
+```
+
+1. Activate an isolated Python environment before installation. Reinstall a normal source installation after changing Python or configuration files.
+2. Run `python -m ai4data.data_snapshot.extract_data_snapshot --help` and inspect `--model`, `--device`, `--dpi`, and `--output-dir`.
+3. For metadata requests, set `OPENROUTER_API_KEY` in the environment or the working directory's `.env`. Select OpenAI with `--metadata-provider=openai` and set `OPENAI_API_KEY` instead. Only the selected key is needed. Exported variables take precedence over `.env`.
+4. Keep credentials outside downloadable examples and version control. Metadata requests send the crop to the selected external provider and consume credits; local snapshot detection makes no metadata requests.
+
+**Worked example.** The recorded run used cached DocLayout-YOLO weights and CPU inference. It used DocLayout-YOLO 0.0.4 with the default DocStructBench weights at 300 DPI. The source-installation path is used because the module README warns that `ai4data==0.1.0` lacks these extras.
+
+**What this does not do.** Installation and help checks do not validate detection quality or external model availability. Model weights can download on the first inference run.
+
+</Recipe>
+
+## Implementation options
+
+Snapshot-only work can omit `data-snapshot-metadata`. Metadata from existing images needs only `data-snapshot-metadata`. The `data-snapshot-core` extra is sufficient for schema validation and PDF/image utilities without a detector or provider SDK.
+
+## Resources
+
+- The [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) documents installation, supported commands, and Python interfaces.
+- The [schema reference](/docs/data-snapshots/metadata-schema/) explains the metadata fields and validation boundaries.
+- The [benchmark paper](https://arxiv.org/html/2606.06242v1) defines analytical snapshots and reports detection and spatial evaluation.
+
+## Common mistakes
+
+- Using a different PDF without recording the change makes crop comparisons unreliable.
+- Installing all detector stacks together can introduce avoidable dependency conflicts.
+- Sending every page to a paid provider bypasses the crop-review step and increases request volume.
+
+## Verification
+
+- The local PDF matches the recorded source or the difference is documented.
+- Command help is available in the selected environment.
+- The selected provider key is configured without appearing in published files.
+
+## Checklist
+
+<Checklist id="data-snapshot-end-to-end-preparation" items={[
+  "The local PDF matches the recorded source or the difference is documented.",
+  "Command help is available in the selected environment.",
+  "The selected provider key is configured without appearing in published files."
+]} />
