@@ -2,8 +2,8 @@
 id: models
 title: "2. Model selection and tradeoffs"
 sidebar_label: "2. Model selection and tradeoffs"
-sidebar_position: 2
-description: This chapter explains which detector, device, and metadata model fit the task.
+sidebar_position: 3
+description: This chapter configures the default detector, device, and metadata preset, then explains supported alternatives and their compatibility limits.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -17,7 +17,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 Detection and metadata extraction answer different questions. A layout detector proposes where a figure or table lies; a metadata model describes what is visible inside its crop. A strong description cannot recover a title or footnote that detection excluded. Selecting each stage therefore requires reviewing its own failure modes.
 
-The default detector provides a starting point whose quality must be assessed on the institution's documents. A representative local sample should include dense tables, charts, maps, composites, scans, and decorative graphics. Compare useful detections, missed artifacts, crop completeness, runtime, memory, and review burden before changing a production model.
+The worked example uses DocLayout-YOLO on CPU and the existing OpenRouter metadata preset. No alternative detector or model is needed to complete the initial workflow. The recipes establish those settings first, then explain the optional choices for a different runtime or provider. Later changes should be assessed on the organization's documents, including the review burden created by irrelevant or incomplete crops.
 
 ## Target state
 
@@ -28,66 +28,90 @@ The default detector provides a starting point whose quality must be assessed on
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
-| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
-| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+| **Foundational** | The organization chooses a detector, device, and metadata provider for one document and notes the settings used. |
+| **AI-ready** | Developers share documented configurations, check runtime and provider compatibility, and assess output quality before changing the selected models. |
+| **AI-native** | An organizational process monitors model-assisted output and proposes configuration changes for human review against agreed quality criteria. Such monitoring is additional integration work. |
 
 :::info[Running example]
-This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+The recorded Shona workflow uses DocLayout-YOLO on CPU and the unchanged packaged OpenRouter metadata preset. These defaults are sufficient to continue to extraction. Alternative detectors, GPU devices, and provider settings are optional paths; they were not evaluated for this example.
 :::
 
 ## Recipes
 
-<Recipe title="2.1 Select a detector and inference device" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="2.1 Select a detector and inference device" level="AI-ready" skills="Developer and data curator" time="Ten minutes to confirm the default detector and device">
 
 **Result:** The extraction command names a supported detector and a device available on the machine.
 
-The supported choices use different optional dependencies. CPU is the default; `--device=cuda:0` selects a CUDA device when supported by the installed runtime and hardware. The option controls PDF detection. Remote metadata inference uses the provider's infrastructure. An unavailable device is an error; the cookbook does not assume automatic GPU fallback.
+The installation in [chapter 1](./preparation.mdx) supplies the default detector. The arguments `--model=doclayoutyolo --device=cpu` select DocLayout-YOLO and local CPU inference. The detector proposes candidate regions; its confidence score does not establish whether each crop is analytically useful.
+
+1. Keep `doclayoutyolo` as the detector for the initial workflow so that the commands match the recorded example.
+2. Keep `cpu` as the device. This avoids assuming that a compatible GPU and runtime are available.
+3. Continue to [snapshot extraction](./snapshots.mdx) once the detector and device are selected. The optional choices below can be considered after the default outputs have been reviewed.
+
+**Worked example.** The recorded exercise used DocLayout-YOLO on CPU. It saved seven figure-labelled crops and one table-labelled crop, including a cover photograph. The next chapter identifies the chart and table selected from that candidate set. Other detector and device choices were not evaluated for this guide.
+
+<details>
+<summary>Optional detectors and GPU devices</summary>
+
+The supported detectors use different optional dependencies. The table identifies the relevant extra and the settings supplied by the package.
 
 | Detector | Extra | Practical consideration |
 |---|---|---|
-| `doclayoutyolo` | `data-snapshot` | This guide's executed baseline uses 1024-pixel inference and a confidence threshold of 0.2. Captions can fall outside its boxes. |
-| `yolo11` | `data-snapshot-yolo11` | The packaged medium model uses 1280-pixel inference. Test its figure and table behavior on the institution's documents. |
-| `yolo26` | `data-snapshot-yolo26` | Another medium layout model with 1280-pixel inference. A newer model is not automatically better for the local workload. |
-| `tfid` | `data-snapshot-tfid` | Uses a separate older Transformers stack and model-provided code at a configured revision. Install it in its own environment. |
+| `doclayoutyolo` | `data-snapshot` | The recorded baseline uses 1024-pixel inference and a confidence threshold of 0.2. Captions can fall outside its boxes. |
+| `yolo11` | `data-snapshot-yolo11` | The packaged medium model uses 1280-pixel inference. Its outputs still need review against the source pages. |
+| `yolo26` | `data-snapshot-yolo26` | This medium layout model also uses 1280-pixel inference. Its release date alone does not establish suitability for an institution's documents. |
+| `tfid` | `data-snapshot-tfid` | This detector uses an older Transformers stack and model-provided code at a configured revision. It requires a separate environment. |
 
-The [paper's Tables 2 and 3](https://arxiv.org/html/2606.06242v1#S6) show why a single ranking is insufficient. For figures, DocLayout-YOLO had recall 0.802 and area recall 0.824; TF-ID-Large had recall 0.488 and area recall 0.938. TF-ID retained more of the annotated context on matched detections while missing more figures. These are historical benchmark results. A comparison of this example or current hardware was not performed. Spatial measures apply only to matched detections.
+1. To try YOLO11, install `python -m pip install ".[data-snapshot-yolo11]"` and select `--model=yolo11`. YOLO26 uses the corresponding `data-snapshot-yolo26` extra and `--model=yolo26`.
+2. Install TF-ID in its own environment with `python -m pip install ".[data-snapshot-tfid]"`, then select `--model=tfid`. Add `data-snapshot-metadata` there only if metadata extraction is needed. Do not combine this stack with `all`.
+3. Select `--device=cuda:0` only when the installed runtime and hardware support that CUDA device. An unavailable device is an error; the workflow does not automatically fall back to CPU.
+4. Use a fresh output root for an optional trial so that existing files are preserved and do not trigger skip logic. The Python APIs `run_extraction` and `run_pipeline` also accept `device="cuda:0"`.
 
-1. Start with `--model=doclayoutyolo --device=cpu` for the recorded exercise.
-2. To try YOLO11, install `python -m pip install ".[data-snapshot-yolo11]"` and select `--model=yolo11`. YOLO26 uses the corresponding `data-snapshot-yolo26` extra and `--model=yolo26`.
-3. Install TF-ID separately with `python -m pip install ".[data-snapshot-tfid]"`, then select `--model=tfid`. Add `data-snapshot-metadata` there only if needed. Do not combine this stack with `all`.
-4. Keep each trial in a fresh output root and compare the same source pages. The Python APIs `run_extraction` and `run_pipeline` also accept `device="cuda:0"`.
+Device selection controls local PDF detection. Remote metadata inference uses the provider's infrastructure. The [benchmark paper](https://arxiv.org/html/2606.06242v1) provides historical evaluation for readers investigating detector choices; this cookbook adds no alternative-model demonstration.
 
-**Worked example.** Only DocLayout-YOLO on CPU was executed for this cookbook. It saved seven figure-labelled crops and one table-labelled crop, including a cover photograph. The other detector commands are supported alternatives whose quality was not evaluated for this guide.
+</details>
 
-**What this does not do.** The CLI does not expose confidence, minimum area, non-maximum-suppression IoU, or inference image size. Those are adapter configuration settings in Python. No speed or accuracy ranking is inferred from this one PDF.
+**What this does not do.** The CLI does not expose the confidence threshold, minimum bounding-box area, overlap threshold for duplicate suppression, or inference image size. The overlap threshold uses intersection-over-union (IoU), which divides the area shared by two boxes by the area of their union. Duplicate suppression uses this measure to reduce overlapping detections. These are detector adapter configuration settings in Python. No speed or accuracy ranking is inferred from this one PDF.
 
 </Recipe>
 
-<Recipe title="2.2 Choose and edit a metadata preset" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="2.2 Confirm the metadata preset and configure alternatives" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect the preset; changes require additional compatibility checks">
 
 **Result:** The selected provider preset names the intended model and compatible request settings.
 
-Metadata presets are different from `config/models.json`, which holds detector weight locations. The CLI chooses a packaged provider preset; it does not have a metadata `--model` or `--config` option.
+A metadata preset is a packaged JSON configuration that names the provider, model, and request settings. For the default path, keep the OpenRouter preset unchanged and use `--metadata-provider=openrouter` in the metadata commands. The environment needs `OPENROUTER_API_KEY`, as described in [chapter 1](./preparation.mdx).
 
-1. In the source checkout, open `src/ai4data/data_snapshot/metadata_extraction/config/openrouter.json` or `openai.json`, according to the selected provider.
-2. Edit the `model` value to an image-capable model that supports the provider's Responses API and strict structured output. OpenRouter model identifiers include their provider prefix. Keep `provider` consistent with the selected endpoint.
-3. Review `max_output_tokens`, `timeout`, `reasoning`, and `service_tier` for that model. Unsupported options can make requests fail. An output-token limit is not a total spending cap, and `timeout` limits waiting time.
-4. Reinstall the checkout after edits with the installation command in chapter 1. For an editable contributor installation, `python -m pip install -e ".[data-snapshot,data-snapshot-metadata]"` makes source edits effective immediately. Do not edit installed files without recording the changes; upgrades can replace them.
+Metadata presets are separate from `config/models.json`, which holds detector weight locations. The CLI selects a packaged provider preset and has no metadata `--model` or `--config` option. These distinctions matter when an organization later changes its metadata model.
+
+1. Inspect `src/ai4data/data_snapshot/metadata_extraction/config/openrouter.json` in the checkout and confirm that it is the preset intended for the example.
+2. Keep its model and request settings unchanged for the initial workflow. The configuration below shows the default production preset.
+3. Continue with the separate extraction stages in [chapter 3](./snapshots.mdx) and [chapter 4](./metadata.mdx). Optional provider and model changes are described in the collapsible section below.
 
 The current OpenRouter preset is embedded from the production file:
 
 ```json file=../../src/ai4data/data_snapshot/metadata_extraction/config/openrouter.json
 ```
 
+<details>
+<summary>Optional provider and metadata model changes</summary>
+
+A different model must accept image input through the selected provider's Responses API and support strict structured output. Request settings that work for one model may be unsupported by another.
+
 The OpenAI alternative is also a packaged preset:
 
 ```json file=../../src/ai4data/data_snapshot/metadata_extraction/config/openai.json
 ```
 
+1. Open `src/ai4data/data_snapshot/metadata_extraction/config/openrouter.json` or `openai.json` in the source checkout, according to the intended provider. Select OpenAI with `--metadata-provider=openai` and configure `OPENAI_API_KEY`.
+2. Edit the `model` value to the intended compatible model. OpenRouter identifiers include their provider prefix. Keep `provider` consistent with the endpoint.
+3. Review `max_output_tokens`, `timeout`, `reasoning`, and `service_tier` for that model. Unsupported settings can make the request fail. The output-token limit is not a total spending cap; `timeout` limits waiting time.
+4. Reinstall the checkout after edits using the installation command in [chapter 1](./preparation.mdx). An editable contributor installation, `python -m pip install -e ".[data-snapshot,data-snapshot-metadata]"`, makes source edits effective immediately. Changes to installed configuration can be replaced during upgrades.
+
+</details>
+
 **Worked example.** The selected requests use the unchanged OpenRouter preset. Larger output allowances may avoid truncation for complex records but can permit more output tokens; model quality, latency, price, and schema adherence require assessment on reviewed crops.
 
-**What this does not do.** This recipe changes configuration. The metadata schema and prompt contract remain defined by the production package. It provides no universal model recommendation and makes no provider-price claim. Automatic retries are disabled.
+**What this does not do.** Selecting or editing a preset does not change the metadata schema or prompt contract. It provides no universal model recommendation and makes no provider-price claim. Automatic retries are disabled.
 
 </Recipe>
 
@@ -109,14 +133,14 @@ Detector locations resolve from explicit Python configuration, then `AI4DATA_SNA
 
 ## Verification
 
-- The selected detector and device are recorded.
-- The installed metadata preset matches the intended model.
-- Alternative detectors are labelled as unexecuted instructions in this example.
+- Inspect the planned extraction command. The default example should select `--model=doclayoutyolo --device=cpu`, matching the dependencies installed in chapter 1.
+- Inspect the selected metadata preset and credential name. The default path uses the packaged OpenRouter configuration and `OPENROUTER_API_KEY`; no model edit is needed to follow the example.
+- If an alternative is chosen, check its extra, runtime, device, and provider requirements before proceeding. A proposed configuration change is not evidence of a successful run.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-models" items={[
-  "The selected detector and device are recorded.",
-  "The installed metadata preset matches the intended model.",
-  "Alternative detectors are labelled as unexecuted instructions in this example."
+  "The detector and device match the prepared environment.",
+  "The metadata provider and preset are selected.",
+  "Compatibility limits are understood before any optional configuration change."
 ]} />

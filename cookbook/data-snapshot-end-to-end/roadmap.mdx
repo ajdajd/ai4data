@@ -2,8 +2,8 @@
 id: roadmap
 title: "8. Extraction improvements and future models"
 sidebar_label: "8. Extraction improvements and future models"
-sidebar_position: 8
-description: This chapter explains what should improve next and how should changes be assessed.
+sidebar_position: 9
+description: This chapter develops proposals for analytical relevance filtering and defines how future pipeline and model changes should be assessed.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -28,17 +28,17 @@ The following roadmap is proposed work. It separates filtering candidates, impro
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
-| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
-| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+| **Foundational** | The organization records recurring extraction problems and identifies changes worth investigating. |
+| **AI-ready** | Improvement proposals name the observed problem, the evaluation data, the measures, and the acceptance criteria before implementation begins. |
+| **AI-native** | An organization uses accumulated review findings and automated evaluations to propose updates for human approval. This describes an improvement process; it does not imply that the proposed classifier is implemented. |
 
 :::info[Running example]
-This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+The Shona photograph motivates a proposed analytical relevance classifier, while the missing captions motivate boundary improvements. The chart title finding provides a metadata-quality case. These examples define problems to investigate without establishing a training set or a demonstrated improvement.
 :::
 
 ## Recipes
 
-<Recipe title="8.1 Design a second-stage analytical relevance classifier" level="AI-native" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="8.1 Design a second-stage analytical relevance classifier" level="AI-native" skills="Developer and data curator" time="Half a day to draft the classifier proposal; data collection and experiments are additional">
 
 **Result:** The organization has a reviewable proposal for filtering irrelevant candidate crops.
 
@@ -55,7 +55,7 @@ A second-stage classifier would examine regions proposed by the layout detector 
 
 </Recipe>
 
-<Recipe title="8.2 Gate pipeline and model updates on reviewed evidence" level="AI-native" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="8.2 Gate pipeline and model updates on reviewed evidence" level="AI-native" skills="Developer and data curator" time="Half a day to define an evaluation and update plan">
 
 **Result:** A proposed update has a bounded test and a recorded acceptance decision.
 
@@ -70,7 +70,7 @@ Model releases and better academic benchmark results motivate investigation. Rep
 | Operations | Add failure reporting, controlled retries, and request accounting. | Output-preservation tests, request limits, and reproducible recovery demonstrations. |
 
 1. Keep the current example and a broader reviewed institutional sample as regression cases.
-2. Test a proposed detector with its required dependency environment, hardware, model licence and image settings. Compare misses, false positives, fragmented composites, captions, and notes.
+2. Test a proposed detector with its required dependency environment, hardware, model licence, and image settings. Compare misses, false positives, fragmented composites, captions, and notes.
 3. Test metadata changes on fixed crops so that detector changes do not confound model comparison. Preserve prompts, presets, and raw responses where permitted.
 4. Publish the decision and unresolved failures alongside the candidate results. Adopt only when the agreed gates pass; otherwise retain the tested baseline.
 
@@ -98,14 +98,15 @@ The separate experimental package provides research annotation and evaluation wo
 
 ## Verification
 
-- The classifier is explicitly proposed and unimplemented.
-- Evaluation separates relevance, boundaries, metadata quality, and operational safety.
-- Future updates require held-out evidence and recorded human decisions.
+- Read the classifier proposal as a development plan. It should identify document-level data splits and assess both precision gain and analytical snapshots incorrectly rejected, with no claim of measured improvement.
+- Check that the proposed evaluation treats relevance, boundary completeness, and metadata correctness separately. A classifier must not be presented as a remedy for regions that were never detected or captions outside the crop.
+- Confirm that the update plan names reviewed evaluation data and acceptance criteria. The Shona cases should illustrate those checks without being described as a sufficient benchmark.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-roadmap" items={[
-  "The classifier is explicitly proposed and unimplemented.",
-  "Evaluation separates relevance, boundaries, metadata quality, and operational safety.",
-  "Future updates require held-out evidence and recorded human decisions."
+  "Each proposed improvement addresses an observed problem.",
+  "Evaluation data and acceptance criteria are specified before implementation.",
+  "The classifier remains explicitly proposed and unimplemented.",
+  "Future changes retain human review of unresolved failures."
 ]} />

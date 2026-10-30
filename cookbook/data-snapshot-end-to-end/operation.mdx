@@ -2,8 +2,8 @@
 id: operation
 title: "7. Recovery and controlled execution"
 sidebar_label: "7. Recovery and controlled execution"
-sidebar_position: 7
-description: This chapter explains how can the pipeline be operated reliably.
+sidebar_position: 8
+description: This chapter explains partial failures, stage-specific recovery, safe replacement, and control of metadata request volume.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -28,17 +28,17 @@ Operational reliability therefore depends on checking output completeness and ch
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
-| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
-| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+| **Foundational** | An operator inspects existing files and chooses a recovery action manually while preserving needed prior results. |
+| **AI-ready** | Recovery instructions distinguish PDF-level skipping from per-image metadata skipping, and the selected configuration and request scope are documented. |
+| **AI-native** | An organization monitors failures and usage and adds controlled recovery with human oversight. Scheduling, retry orchestration, and spending enforcement require additional implementation. |
 
 :::info[Running example]
-This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+The staged Shona run has eight candidate crops and metadata for only the selected chart and table. This intentionally partial set explains why a combined rerun in the same root would skip the PDF, while metadata-only execution is the appropriate path for missing selected records.
 :::
 
 ## Recipes
 
-<Recipe title="7.1 Resume or replace the correct stage" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="7.1 Resume or replace the correct stage" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect a partial run and choose recovery">
 
 **Result:** The operator can rerun a stage without confusing skip and replacement behavior.
 
@@ -55,13 +55,13 @@ The correct recovery command depends on which files already exist. A fresh outpu
 3. Use a new destination when comparing settings. If replacement is intended, preserve any needed previous results before `--force`.
 4. Expect forced deletion to occur before model loading or replacement succeeds. Failure does not restore the old files.
 
-**Worked example.** After the snapshot-only Shona run, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in chapter 4 are the appropriate way to enrich selected images. The remaining crops intentionally have no metadata.
+**Worked example.** After the snapshot-only Shona run, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in [chapter 4](./metadata.mdx) are the appropriate way to enrich selected images. The remaining crops intentionally have no metadata.
 
 **What this does not do.** The package does not automatically resume missing pages, retry failed requests, or maintain a job ledger. An empty-detection PDF has no completion marker and can be processed again.
 
 </Recipe>
 
-<Recipe title="7.2 Record settings and bound paid work" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="7.2 Record settings and bound paid work" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to document settings and plan request volume">
 
 **Result:** A future reader can identify the configuration and the operator can limit request volume.
 
@@ -90,20 +90,21 @@ The Python metadata API returns structured errors, including incomplete-response
 
 ## Common mistakes
 
-- Using --force to fill missing metadata needlessly deletes working crops.
+- Using a PDF command with `--force` to fill missing metadata deletes working crops. Metadata-only recovery avoids that deletion.
 - Assuming skipped JSON is valid hides corrupted or obsolete records.
 - Publishing a dollar estimate without billing evidence confuses configuration limits with measured cost.
 
 ## Verification
 
-- Recovery uses the correct stage and preserves needed prior outputs.
-- Source, detector settings, and metadata preset are identified.
-- Only selected crops are submitted in the paid example.
+- Inspect which selected images already have JSON files before choosing recovery. In the recorded example, the other six candidates intentionally lack metadata and do not constitute failed requests.
+- Compare the intended command with the rerun table. Filling a missing selected JSON should use metadata-only execution; any planned `--force` replacement should account for files deleted before success is known.
+- Check the recorded detector, device, DPI, provider, and image selection. A bounded two-image plan should contain no directory-wide metadata or combined invocation.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-operation" items={[
-  "Recovery uses the correct stage and preserves needed prior outputs.",
-  "Source, detector settings, and metadata preset are identified.",
-  "Only selected crops are submitted in the paid example."
+  "The intended request scope and missing selected outputs are identified.",
+  "The recovery command targets the required stage.",
+  "Needed prior files are preserved before replacement.",
+  "Settings and paid request volume are understood."
 ]} />

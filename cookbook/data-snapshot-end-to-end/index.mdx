@@ -29,24 +29,31 @@ The result is a set of PNG images and Schema v1.4 JSON descriptions. Numerical t
 
 ## First steps
 
-1. Prepare the source and environment in [chapter 1](./preparation.mdx). Allow about thirty minutes plus installation time.
-2. Choose the detector and device in [chapter 2](./models.mdx), then inspect the snapshot run in [chapter 3](./snapshots.mdx). Allow about thirty minutes plus machine-dependent execution time.
-3. Generate metadata for the two selected images in [chapter 4](./metadata.mdx), then review the source and outputs in [chapter 6](./review.mdx). Allow about one hour plus provider waiting time.
+The shortest path uses the recorded example's default configuration and the two selected crops. Alternative models can be considered after these outputs have been reviewed.
 
-The later chapters explain combined execution, recovery, and proposed improvements. These are indicative learning times. Inference performance was not benchmarked.
+1. Prepare the Shona PDF and Python environment in [chapter 1](./preparation.mdx), then confirm DocLayout-YOLO on CPU and the unchanged OpenRouter preset in [chapter 2](./models.mdx). Allow about forty minutes for preparation, plus dependency installation time.
+2. Run snapshot-only extraction and inspect the chart and table in [chapter 3](./snapshots.mdx). Allow about twenty-five minutes for command preparation and crop inspection, plus detector execution time.
+3. Generate metadata for only those two crops and validate the JSON in [chapter 4](./metadata.mdx). Allow about thirty minutes for selection, submission, and local inspection, plus provider waiting time. The downloadable responses can also be inspected without making new requests.
+4. Review the source pages, crops, and raw responses in [chapter 5](./review.mdx). Allow about forty minutes to identify missing context and questionable metadata and consider the suggested next steps.
+
+[Chapter 6](./combined.mdx) then explains the supported combined command and its expected output tree; the cookbook does not execute it. [Chapter 7](./operation.mdx) covers recovery and request control, and [chapter 8](./roadmap.mdx) describes proposed improvements. All times are indicative estimates of human work. They are not measured model runtimes or provider latency.
+
+## Self-assessment
+
+The [self-assessment](./start-here.mdx) identifies the organization's current practices across the eight chapters and suggests a reading path. It can help a team select priorities; the First steps above provide the default route through the worked example.
 
 ## Chapters and questions
 
 | Chapter | Question | Practical topics |
 |---|---|---|
-| [1. Environment and source documents](./preparation.mdx) | What must be prepared before extraction? | Source identity, dependencies, credentials |
-| [2. Model selection and tradeoffs](./models.mdx) | Which detector, device, and metadata model fit the task? | Detector alternatives, device, metadata config |
-| [3. Snapshot extraction](./snapshots.mdx) | How are figures and tables extracted as images? | Actual PNG crops and missing context |
-| [4. Semantic metadata extraction](./metadata.mdx) | How is a crop described in structured metadata? | Two selected requests and schema validation |
-| [5. Combined execution and output structure](./combined.mdx) | How are both stages invoked together? | Unexecuted command and expected tree |
-| [6. Crop and metadata review](./review.mdx) | Are the extracted outputs fit for use? | Crop completeness and metadata adjudication |
-| [7. Recovery and controlled execution](./operation.mdx) | How can the pipeline be operated reliably? | Skip rules, recovery, costs, run evidence |
-| [8. Extraction improvements and future models](./roadmap.mdx) | What should improve next and how should changes be assessed? | Proposed classifier and update gates |
+| [1. Environment and source documents](./preparation.mdx) | What must be prepared before extraction? | Source publication, environment, dependencies, and credentials |
+| [2. Model selection and tradeoffs](./models.mdx) | Which detector, device, and metadata model fit the task? | Default configuration, optional alternatives, and compatibility limits |
+| [3. Snapshot extraction](./snapshots.mdx) | How are figures and tables extracted as images? | Candidate PNG outputs, selected crops, and missing context |
+| [4. Semantic metadata extraction](./metadata.mdx) | How is a crop described in structured metadata? | Two selected requests, raw JSON, and schema validation |
+| [5. Crop and metadata review](./review.mdx) | Are the extracted outputs fit for use? | Source comparison, interpretation findings, and illustrative review notes |
+| [6. Combined execution and output structure](./combined.mdx) | How are both stages invoked together? | Unexecuted invocation and expected output pairs |
+| [7. Recovery and controlled execution](./operation.mdx) | How can the pipeline be operated reliably? | Partial failures, skip rules, safe reruns, and request scope |
+| [8. Extraction improvements and future models](./roadmap.mdx) | What should improve next and how should changes be assessed? | Proposed classifier, evaluation planning, and future update criteria |
 
 ## Maturity levels
 
@@ -60,22 +67,22 @@ The later chapters explain combined execution, recovery, and proposed improvemen
 
 The guide uses the real *From Stateless to Citizens: The Journey of Shona in Kenya* policy brief. The [ReliefWeb report](https://reliefweb.int/report/kenya/policy-brief-stateless-citizens-journey-shona-community-kenya) links to the [PDF attachment](https://reliefweb.int/attachments/831aca28-6777-4cb9-9b84-8976c63061fb/Policy%20Brief%20on%20Shona%20community_From%20Stateless%20to%20Citizens.pdf). PDF page 4 contains both selected artifacts. Their numerical observations remain source content. No numerical transcription was performed for this guide.
 
-The recorded detector output contains seven figure-labelled crops and one table-labelled crop, including an irrelevant photograph. The selected chart is `figure_001`; the existing gold dataset uses `figure_000` for a different extraction history. Filenames identify different extraction histories; they are not interchangeable identifiers for reviewed metadata.
+The recorded detector output contains seven figure-labelled crops and one table-labelled crop, including an irrelevant photograph. The selected chart is `figure_001`; the existing gold dataset uses `figure_000` for a different extraction history. Those filenames are not interchangeable identifiers for reviewed metadata.
 
 ## Scope of the examples
 
-The figure and table crops are actual production outputs; their metadata records come from separate selected-image requests. The combined example is unexecuted and its file tree is explicitly conditional. Other detectors are documented but not benchmarked here. The second-stage classifier and improvement roadmap are proposed extensions. The example was run on 30 October 2026 using DocLayout-YOLO 0.0.4, CPU, 300 DPI, and the unchanged packaged OpenRouter preset. The two JSON files are unedited model responses, with review findings in chapters 4 and 6.
+The figure and table crops are actual production outputs; their metadata records come from separate selected-image requests. The combined example is unexecuted and its file tree is explicitly conditional. Other detectors are documented but not benchmarked here. The second-stage classifier and improvement roadmap are proposed extensions. The example was run on 30 October 2026 using DocLayout-YOLO 0.0.4, CPU, 300 DPI, and the unchanged packaged OpenRouter preset. The two JSON files are unedited model responses, with interpretation findings in [chapter 4](./metadata.mdx) and review observations in [chapter 5](./review.mdx).
 
 ## Files
 
 | File | Used in |
 |---|---|
-| [inspect_metadata.py](pathname:///cookbook-files/data-snapshot-end-to-end/inspect_metadata.py) | Chapters 3 to 7 use this selected artifact or inspection helper. |
-| [policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json) | Chapters 3 to 7 use this selected artifact or inspection helper. |
-| [policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png) | Chapters 3 to 7 use this selected artifact or inspection helper. |
-| [policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json) | Chapters 3 to 7 use this selected artifact or inspection helper. |
-| [policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png) | Chapters 3 to 7 use this selected artifact or inspection helper. |
-| [shona-page-4.webp](pathname:///cookbook-files/data-snapshot-end-to-end/shona-page-4.webp) | Chapters 3 to 7 use this selected artifact or inspection helper. |
+| [inspect_metadata.py](pathname:///cookbook-files/data-snapshot-end-to-end/inspect_metadata.py) | Chapter 4 uses this helper, which leaves its input unchanged, to validate one metadata record and display its populated fields. |
+| [policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json) | Chapters 4 and 5 inspect this unedited chart response, including the axis-label title finding. |
+| [policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png) | Chapters 3 to 5 use this selected chart crop as a metadata input and compare its boundaries with the page. |
+| [policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json) | Chapters 4 and 5 inspect this unedited table response and its relationship to the visible rows and year columns. |
+| [policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png) | Chapters 3 to 5 use this selected demographic-table crop as the second metadata input. |
+| [shona-page-4.webp](pathname:///cookbook-files/data-snapshot-end-to-end/shona-page-4.webp) | Chapters 3 and 5 use this source-page image to locate both artifacts and identify captions and source notes outside the crops. |
 
 ## Related resources
 

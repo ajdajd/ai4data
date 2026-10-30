@@ -1,21 +1,21 @@
 ---
 id: combined
-title: "5. Combined execution and output structure"
-sidebar_label: "5. Combined execution and output structure"
-sidebar_position: 5
-description: This chapter explains how are both stages invoked together.
+title: "6. Combined execution and output structure"
+sidebar_label: "6. Combined execution and output structure"
+sidebar_position: 7
+description: This chapter explains the supported combined command and its expected output layout while distinguishing the unexecuted example from recorded staged results.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 5. Combined execution and output structure
+# 6. Combined execution and output structure
 
 **Question:** How are both stages invoked together?
 
 ## Rationale
 
-The combined command first extracts crops and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
+The separate stages in chapters 3 to 5 show how to select crops, inspect metadata, and review the results before choosing a wider request scope. The combined command first extracts crops and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
 
 The combined example here is supported by the implementation but deliberately unexecuted. Its directory tree illustrates expected naming and stage relationships. The recorded evidence in this guide comes from snapshot-only extraction and the two selected metadata-only requests.
 
@@ -28,17 +28,17 @@ The combined example here is supported by the implementation but deliberately un
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
-| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
-| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+| **Foundational** | The organization completes snapshot and metadata extraction as separate steps and can match each selected image to its description. |
+| **AI-ready** | A developer can configure the combined entry point, identify its output pairs, and account for metadata requests across all newly extracted candidates. |
+| **AI-native** | An organization integrates both stages with monitored request volume, output checks, and human review. The combined command alone does not provide that wider operational system. |
 
 :::info[Running example]
-This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+The Shona combined invocation uses a fresh `output/shona-combined` root and is not executed for this guide. Its abbreviated tree shows where the already familiar chart and table pairs would appear if extraction and metadata requests succeeded.
 :::
 
 ## Recipes
 
-<Recipe title="5.1 Prepare a combined invocation" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="6.1 Prepare a combined invocation" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the optional invocation; execution time varies">
 
 **Result:** The reader has a supported command and a fresh destination.
 
@@ -57,11 +57,11 @@ python -m ai4data.data_snapshot \
 
 **Worked example.** The guide does not execute this command. If a run reproduces the observed eight crops and every metadata request succeeds, the output would have eight PNGs and eight JSONs, including a record for the photograph. This is a conditional expectation; only the selected two-image requests were performed.
 
-**What this does not do.** The combined command is not transactional. Extraction errors can prevent metadata processing; metadata errors stop at the failing image while earlier files remain.
+**What this does not do.** The combined command does not roll back an entire run after failure. Extraction errors can prevent metadata processing; metadata errors stop at the failing image while earlier files remain.
 
 </Recipe>
 
-<Recipe title="5.2 Read the expected directory layout" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="6.2 Read the expected directory layout" level="AI-ready" skills="Developer and data curator" time="Ten minutes to interpret the expected file layout">
 
 **Result:** The relationship between crop and metadata filenames is explicit.
 
@@ -105,14 +105,14 @@ Python callers can use `run_pipeline(input_path, output_dir, model_name="doclayo
 
 ## Verification
 
-- The combined example is labelled as unexecuted.
-- The output root is distinct from the snapshot-only exercise.
-- The reader understands that all new crops would receive metadata requests.
+- Compare the proposed command with the staged example. Its destination should be `output/shona-combined`, distinct from `output/cookbook-shona`, so the prior crops would not trigger PDF-level skipping.
+- Read the expected tree by matching complete PNG and JSON stems. It should illustrate the selected pairs while leaving clear that other newly detected regions would also be processed.
+- If the command is run later, inspect its actual files and failures before describing it as successful. The current tree remains an unexecuted illustration.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-combined" items={[
-  "The combined example is labelled as unexecuted.",
-  "The output root is distinct from the snapshot-only exercise.",
-  "The reader understands that all new crops would receive metadata requests."
+  "A fresh destination is chosen for any later combined run.",
+  "The request volume includes all newly extracted candidates.",
+  "The expected tree is distinguished from the actual staged outputs."
 ]} />

@@ -2,8 +2,8 @@
 id: snapshots
 title: "3. Snapshot extraction"
 sidebar_label: "3. Snapshot extraction"
-sidebar_position: 3
-description: This chapter explains how are figures and tables extracted as images.
+sidebar_position: 4
+description: This chapter runs snapshot-only extraction and inspects the figure and table crops selected from the detector outputs.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -15,7 +15,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-PDF pages are rendered as RGB images before the detector runs. The detector returns a class, confidence, and normalized rectangle for each retained region. Normalized coordinates describe the left, top, right, and bottom edges as fractions of page width and height, measured from the top-left corner.
+PDF pages are rendered as red, green, and blue (RGB) images before the detector runs. The detector returns a class, confidence, and normalized rectangle for each retained region. Normalized coordinates describe the left, top, right, and bottom edges as fractions of page width and height, measured from the top-left corner.
 
 The production workflow crops these rectangles directly. It does not pad boxes, merge panels, or persist page coordinates. The semantic JSON generated in the next stage describes image content and serves a different purpose.
 
@@ -28,21 +28,21 @@ The production workflow crops these rectangles directly. It does not pad boxes, 
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
-| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
-| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+| **Foundational** | A curator identifies analytical regions on source pages and saves or inspects example crops manually. |
+| **AI-ready** | A developer runs the documented detector, retains its candidate PNG outputs, and checks selected crops against their source pages before further processing. |
+| **AI-native** | An organization integrates detection into document intake and checks candidate relevance and crop completeness under human review. Automatic quality monitoring is not supplied by this example. |
 
 :::info[Running example]
-This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+The snapshot-only run processes all twelve Shona pages and saves seven figure-labelled crops and one table-labelled crop. The cover photograph is `figure_000`. The chart `figure_001` and demographic table `table_000`, both from PDF page 4, are the two crops selected for the next chapter.
 :::
 
 ## Recipes
 
-<Recipe title="3.1 Run snapshot-only extraction" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="3.1 Run snapshot-only extraction" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the command; detector execution time varies">
 
 **Result:** The document has been processed without a metadata API request.
 
-The following command uses the PDF acquired in chapter 1. `--output-dir` is the root; the package appends the detector name and `snapshots/`. It renders at 300 DPI by default. All twelve pages are processed because the CLI has no page-range option.
+The following command uses the PDF acquired in [chapter 1](./preparation.mdx) and the default settings selected in [chapter 2](./models.mdx). `--output-dir` is the root; the package appends the detector name and `snapshots/`. The source filename stem is its name without the `.pdf` extension and becomes the prefix of each crop filename. It renders at 300 DPI by default. All twelve pages are processed because the CLI has no page-range option.
 
 ```bash
 python -m ai4data.data_snapshot.extract_data_snapshot \
@@ -61,7 +61,7 @@ python -m ai4data.data_snapshot.extract_data_snapshot \
 
 </Recipe>
 
-<Recipe title="3.2 Inspect the figure and table crops" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="3.2 Inspect the figure and table crops" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect the two selected crops">
 
 **Result:** The two examples have been checked against their source page.
 
@@ -84,6 +84,8 @@ The figure counter and table counter are independent and start at zero. They con
 
 </Recipe>
 
+The two selected PNG crops now provide the image inputs for [chapter 4](./metadata.mdx). The full detector-output folder remains available for inspection; selecting these two crops does not remove or reclassify any of its other candidates.
+
 ## Implementation options
 
 Use `--dpi` to choose a positive rendering resolution and a new output root to compare settings safely. Higher resolution consumes more rendering memory and storage; inference also uses the adapter's own image-size setting. The lower-level `extract_snapshots` API accepts a custom detector, while `run_extraction` provides the model-scoped directory convention.
@@ -102,14 +104,14 @@ Use `--dpi` to choose a positive rendering resolution and a new output root to c
 
 ## Verification
 
-- The selected figure and table are visually matched to PDF page 4.
-- The source page, captions, legends, and missing context have been checked.
-- The snapshot-only run has made no metadata request.
+- Inspect the printed paths and the `output/cookbook-shona/doclayoutyolo/snapshots/` directory. The recorded example contains seven figure-labelled PNGs and one table-labelled PNG; investigate differences before relying on the example filenames.
+- Open `figure_001` and `table_000` beside PDF page 4. The selected chart should retain its panels and legend, and the table should retain its five rows and both year columns.
+- Check the page beyond each crop boundary. The recorded crops omit their printed captions and source notes, while the cover photograph is an irrelevant analytical candidate.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-snapshots" items={[
-  "The selected figure and table are visually matched to PDF page 4.",
-  "The source page, captions, legends, and missing context have been checked.",
-  "The snapshot-only run has made no metadata request."
+  "The complete candidate-output folder has been inspected.",
+  "The chart and table are selected by their full filenames.",
+  "Missing context and the irrelevant photograph are noted before metadata extraction."
 ]} />

@@ -2,8 +2,8 @@
 id: preparation
 title: "1. Environment and source documents"
 sidebar_label: "1. Environment and source documents"
-sidebar_position: 1
-description: This chapter explains what must be prepared before extraction.
+sidebar_position: 2
+description: This chapter prepares the source PDF, Python environment, dependencies, and credentials for the default workflow.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -28,17 +28,17 @@ The production package renders PDF pages, detects candidate regions, and saves c
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator inspects the source page and records the evidence and unresolved questions. |
-| **AI-ready** | A developer runs the documented stage and checks its files against the source and schema. |
-| **AI-native** | The organization proposes monitored automation with retained evidence and human review. This level describes an operational goal. The available package features are documented separately. |
+| **Foundational** | The organization retains the source PDF with its publication link and identifies the pages containing the artifacts of interest. |
+| **AI-ready** | The source location, environment setup, required extras, and credential handling are documented so that another developer can prepare the same workflow. |
+| **AI-native** | An organizational intake process checks new documents and their processing environment before model-assisted extraction. This requires integration beyond the commands in this guide. |
 
 :::info[Running example]
-This chapter uses the Shona policy brief and the figure and table on PDF page 4. The recorded exercise uses snapshot-only extraction and metadata-only requests for these two crops. Combined execution is an unexecuted illustration.
+Preparation begins with the twelve-page Shona policy brief. The publication links identify the source, and PDF page 4 provides the chart and demographic table used throughout the guide. This chapter prepares the environment without submitting either image to a metadata provider.
 :::
 
 ## Recipes
 
-<Recipe title="1.1 Prepare the Shona policy brief" level="Foundational" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="1.1 Prepare the Shona policy brief" level="Foundational" skills="Developer and data curator" time="Ten minutes for source inspection">
 
 **Result:** The organization has a local PDF and a source identity that can be checked.
 
@@ -55,7 +55,7 @@ The running document is *From Stateless to Citizens: The Journey of Shona in Ken
 
 </Recipe>
 
-<Recipe title="1.2 Install the selected stages" level="AI-ready" skills="Developer and data curator" time="Twenty minutes plus execution and review">
+<Recipe title="1.2 Install the selected stages" level="AI-ready" skills="Developer and data curator" time="Thirty minutes for setup; dependency installation time varies">
 
 **Result:** The Python environment can import the workflow and expose its command help.
 
@@ -70,7 +70,7 @@ python -m pip install ".[data-snapshot,data-snapshot-metadata]"
 3. For metadata requests, set `OPENROUTER_API_KEY` in the environment or the working directory's `.env`. Select OpenAI with `--metadata-provider=openai` and set `OPENAI_API_KEY` instead. Only the selected key is needed. Exported variables take precedence over `.env`.
 4. Keep credentials outside downloadable examples and version control. Metadata requests send the crop to the selected external provider and consume credits; local snapshot detection makes no metadata requests.
 
-**Worked example.** The recorded run used cached DocLayout-YOLO weights and CPU inference. It used DocLayout-YOLO 0.0.4 with the default DocStructBench weights at 300 DPI. The source-installation path is used because the module README warns that `ai4data==0.1.0` lacks these extras.
+**Worked example.** The recorded run used DocLayout-YOLO 0.0.4 with cached default DocStructBench weights and CPU inference. Its rendering resolution was 300 dots per inch (DPI), which specifies the density of pixels used to represent the PDF page. The source-installation path is used because the module README warns that `ai4data==0.1.0` lacks these extras.
 
 **What this does not do.** Installation and help checks do not validate detection quality or external model availability. Model weights can download on the first inference run.
 
@@ -94,14 +94,14 @@ Snapshot-only work can omit `data-snapshot-metadata`. Metadata from existing ima
 
 ## Verification
 
-- The local PDF matches the recorded source or the difference is documented.
-- Command help is available in the selected environment.
-- The selected provider key is configured without appearing in published files.
+- Open the local PDF and confirm that it has twelve pages, with Figure 1 and Table 1 on PDF page 4. The publication link and local filename should identify the same document.
+- Run the snapshot-only command with `--help` in the selected environment. Successful preparation makes the options available without starting extraction.
+- Check that the selected provider key is available through the environment or a local `.env` file. No credential should appear in a downloadable file or repository change.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-preparation" items={[
-  "The local PDF matches the recorded source or the difference is documented.",
-  "Command help is available in the selected environment.",
-  "The selected provider key is configured without appearing in published files."
+  "The source publication and local PDF are identified.",
+  "The intended environment and optional dependencies are ready.",
+  "The selected provider credential is kept outside published files."
 ]} />
