@@ -1,15 +1,15 @@
 ---
 id: snapshots
-title: "3. Snapshot extraction"
-sidebar_label: "3. Snapshot extraction"
-sidebar_position: 4
+title: "2. Snapshot extraction"
+sidebar_label: "2. Snapshot extraction"
+sidebar_position: 3
 description: This chapter runs snapshot-only extraction and inspects the figure and table data snapshots selected from the detector outputs.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 3. Snapshot extraction
+# 2. Snapshot extraction
 
 **Question:** How are figures and tables extracted as images?
 
@@ -38,17 +38,19 @@ The snapshot-only run processes the twelve-page sample PDF used in the tutorial 
 
 ## Recipes
 
-<Recipe title="3.1 Run snapshot-only extraction" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the command; detector execution time varies">
+<Recipe title="2.1 Run snapshot-only extraction" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the command; detector execution time varies">
 
 **Result:** The document has been processed without a metadata API request.
 
-The following command uses the PDF acquired in [chapter 1](./preparation.mdx) and the default settings selected in [chapter 2](./models.mdx). `--output-dir` is the root; the package appends the detector name and `snapshots/`. The source filename stem is its name without the `.pdf` extension and becomes the prefix of each data snapshot filename. It renders at 300 DPI by default. All twelve pages are processed because the CLI has no page-range option.
+The following command uses the PDF acquired in [chapter 1](./preparation.mdx) with DocLayout-YOLO on CPU. `--output-dir` is the root; the package appends the detector name and `snapshots/`. The source filename stem is its name without the `.pdf` extension and becomes the prefix of each data snapshot filename. It renders at 300 DPI by default. All twelve pages are processed because the CLI has no page-range option.
 
 ```bash
 python -m ai4data.data_snapshot.extract_data_snapshot \
   --input=data/policy_brief_on_shona_community_from_stateless_to_citizens.pdf \
   --output-dir=output/cookbook-shona --model=doclayoutyolo --device=cpu
 ```
+
+If a compatible NVIDIA GPU and CUDA runtime are available, replace `--device=cpu` with `--device=cuda:0`. The recorded example uses CPU. An unavailable CUDA device causes an error; there is no automatic CPU fallback.
 
 1. Use a fresh destination so that an earlier file does not cause the entire PDF to be skipped.
 2. Run the command and inspect progress and printed paths. An input can also be a directory searched recursively for PDFs.
@@ -61,7 +63,7 @@ python -m ai4data.data_snapshot.extract_data_snapshot \
 
 </Recipe>
 
-<Recipe title="3.2 Inspect the figure and table data snapshots" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect the two selected data snapshots">
+<Recipe title="2.2 Inspect the figure and table data snapshots" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect the two selected data snapshots">
 
 **Result:** The two examples have been checked against their source page.
 
@@ -84,7 +86,7 @@ The figure counter and table counter are independent and start at zero. They con
 
 </Recipe>
 
-The two selected PNG data snapshots now provide the image inputs for [chapter 4](./metadata.mdx). The full detector-output folder remains available for inspection; selecting these two images does not remove or reclassify any of its other candidates.
+The two selected PNG data snapshots now provide the image inputs for [chapter 3](./metadata.mdx). The full detector-output folder remains available for inspection; selecting these two images does not remove or reclassify any of its other candidates.
 
 ## Implementation options
 

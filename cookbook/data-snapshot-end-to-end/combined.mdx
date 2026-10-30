@@ -1,21 +1,21 @@
 ---
 id: combined
-title: "6. Combined execution and output structure"
-sidebar_label: "6. Combined execution and output structure"
-sidebar_position: 7
+title: "5. Combined execution and output structure"
+sidebar_label: "5. Combined execution and output structure"
+sidebar_position: 6
 description: This chapter explains the supported combined command and its expected output layout while distinguishing the unexecuted example from recorded staged results.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 6. Combined execution and output structure
+# 5. Combined execution and output structure
 
 **Question:** How are both stages invoked together?
 
 ## Rationale
 
-The separate stages in chapters 3 to 5 show how to select data snapshots, inspect metadata, and review the results before choosing a wider request scope. The combined command first extracts data snapshots and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
+The separate stages in chapters 2 to 4 show how to select data snapshots, inspect metadata, and review the results before choosing a wider request scope. The combined command first extracts data snapshots and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
 
 The combined example here is supported by the implementation but deliberately unexecuted. Its directory tree illustrates expected naming and stage relationships. The recorded evidence in this guide comes from snapshot-only extraction and the two selected metadata-only requests.
 
@@ -38,7 +38,7 @@ For the sample PDF used in the tutorial, the combined invocation specifies a fre
 
 ## Recipes
 
-<Recipe title="6.1 Prepare a combined invocation" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the optional invocation; execution time varies">
+<Recipe title="5.1 Prepare a combined invocation" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the optional invocation; execution time varies">
 
 **Result:** The reader has a supported command and a fresh destination.
 
@@ -61,7 +61,7 @@ python -m ai4data.data_snapshot \
 
 </Recipe>
 
-<Recipe title="6.2 Read the expected directory layout" level="AI-ready" skills="Developer and data curator" time="Ten minutes to interpret the expected file layout">
+<Recipe title="5.2 Read the expected directory layout" level="AI-ready" skills="Developer and data curator" time="Ten minutes to interpret the expected file layout">
 
 **Result:** The relationship between data snapshot and metadata filenames is explicit.
 

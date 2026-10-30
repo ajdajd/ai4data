@@ -1,21 +1,21 @@
 ---
 id: metadata
-title: "4. Semantic metadata extraction"
-sidebar_label: "4. Semantic metadata extraction"
-sidebar_position: 5
+title: "3. Semantic metadata extraction"
+sidebar_label: "3. Semantic metadata extraction"
+sidebar_position: 4
 description: This chapter generates semantic metadata for two selected data snapshots and validates the raw JSON records against the production schema.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 4. Semantic metadata extraction
+# 3. Semantic metadata extraction
 
 **Question:** How is a data snapshot described in structured metadata?
 
 ## Rationale
 
-The two data snapshots selected in [chapter 3](./snapshots.mdx) are the inputs to the metadata stage. This stage uses a vision-language model, which processes an image together with text instructions. The production prompt asks for evidence visible in that image and excludes filenames and parent-document metadata. Its response is validated against the canonical Data Snapshot Metadata Schema v1.4 before a JSON file is saved.
+The two data snapshots selected in [chapter 2](./snapshots.mdx) are the inputs to the metadata stage. This stage uses a vision-language model, which processes an image together with text instructions. The production prompt asks for evidence visible in that image and excludes filenames and parent-document metadata. Its response is validated against the canonical Data Snapshot Metadata Schema v1.4 before a JSON file is saved.
 
 Metadata fields describe analytical meaning: measured variables, their units, grouping dimensions, temporal coverage, visible sources, and related context. They do not hold a reconstructed numerical dataset. Missing and null fields represent unavailable information; validation cannot establish that the model interpreted the image correctly.
 
@@ -33,12 +33,12 @@ Metadata fields describe analytical meaning: measured variables, their units, gr
 | **AI-native** | An organization integrates model-assisted metadata generation with validation and human review before reuse. Additional integration is needed to monitor semantic quality and manage corrections. |
 
 :::info[Running example]
-Only the chart `figure_001` and table `table_000` selected in chapter 3 are submitted for metadata extraction. Each has a corresponding raw JSON record. The figure response uses its vertical-axis label as the title, demonstrating why a schema-valid response still needs inspection.
+Only the chart `figure_001` and table `table_000` selected in chapter 2 are submitted for metadata extraction. Each has a corresponding raw JSON record. The figure response uses its vertical-axis label as the title, demonstrating why a schema-valid response still needs inspection.
 :::
 
 ## Recipes
 
-<Recipe title="4.1 Generate metadata for selected data snapshots" level="AI-ready" skills="Developer and data curator" time="Ten minutes to select and submit the images; provider waiting time varies">
+<Recipe title="3.1 Generate metadata for selected data snapshots" level="AI-ready" skills="Developer and data curator" time="Ten minutes to select and submit the images; provider waiting time varies">
 
 **Result:** Each selected image has one validated JSON record.
 
@@ -69,7 +69,7 @@ python -m ai4data.data_snapshot.extract_metadata \
 
 </Recipe>
 
-<Recipe title="4.2 Validate and interpret a metadata record" level="AI-ready" skills="Developer and data curator" time="Twenty minutes for local validation and interpretation">
+<Recipe title="3.2 Validate and interpret a metadata record" level="AI-ready" skills="Developer and data curator" time="Twenty minutes for local validation and interpretation">
 
 **Result:** The JSON representation is checked and its populated fields are understood.
 
@@ -113,7 +113,7 @@ The recorded responses can be inspected below without running the provider again
 
 </Recipe>
 
-The raw JSON records and the selected data snapshots are now ready for [chapter 5](./review.mdx), which examines relevance, missing context, and questionable field interpretations together. The records remain unchanged during that review.
+The raw JSON records and the selected data snapshots are now ready for [chapter 4](./review.mdx), which examines relevance, missing context, and questionable field interpretations together. The records remain unchanged during that review.
 
 ## Implementation options
 
@@ -135,7 +135,7 @@ The top-level Python `extract_metadata(image_path, config_path=...)` returns an 
 
 - Match each selected PNG to a JSON file with exactly the same stem in the metadata directory. The recorded exercise has two selected-image responses; the remaining detector candidates intentionally have no metadata.
 - Run `inspect_metadata.py` on each downloaded JSON. A zero exit status and a display of populated fields indicate that the record satisfies the canonical model; the script should leave the input file unchanged.
-- Compare the figure response with the data snapshot. Confirm that `title` contains the axis label `Percent of population` and retain this finding for the review in chapter 5.
+- Compare the figure response with the data snapshot. Confirm that `title` contains the axis label `Percent of population` and retain this finding for the review in chapter 4.
 
 ## Checklist
 

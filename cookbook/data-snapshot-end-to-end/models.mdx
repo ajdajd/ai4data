@@ -1,15 +1,15 @@
 ---
 id: models
-title: "2. Model selection and tradeoffs"
-sidebar_label: "2. Model selection and tradeoffs"
-sidebar_position: 3
+title: "7. Model selection and tradeoffs"
+sidebar_label: "7. Model selection and tradeoffs"
+sidebar_position: 8
 description: This chapter configures the default detector, device, and metadata preset, then explains supported alternatives and their compatibility limits.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 2. Model selection and tradeoffs
+# 7. Model selection and tradeoffs
 
 **Question:** Which detector, device, and metadata model fit the task?
 
@@ -33,12 +33,12 @@ The worked example uses DocLayout-YOLO on CPU and the existing OpenRouter metada
 | **AI-native** | An organizational process monitors model-assisted output and proposes configuration changes for human review against agreed quality criteria. Such monitoring is additional integration work. |
 
 :::info[Running example]
-The recorded workflow for the sample PDF used in the tutorial uses DocLayout-YOLO on CPU and the unchanged packaged OpenRouter metadata preset. These defaults are sufficient to continue to extraction. Alternative detectors, GPU devices, and provider settings are optional paths; they were not evaluated for this example.
+The recorded workflow for the sample PDF used in the tutorial uses DocLayout-YOLO on CPU and the unchanged packaged OpenRouter metadata preset. These are the settings used in the preceding extraction and metadata examples. Alternative detectors, GPU devices, and provider settings are optional paths; they were not evaluated for this example.
 :::
 
 ## Recipes
 
-<Recipe title="2.1 Select a detector and inference device" level="AI-ready" skills="Developer and data curator" time="Ten minutes to confirm the default detector and device">
+<Recipe title="7.1 Select a detector and inference device" level="AI-ready" skills="Developer and data curator" time="Ten minutes to confirm the default detector and device">
 
 **Result:** The extraction command names a supported detector and a device available on the machine.
 
@@ -46,9 +46,9 @@ The installation in [chapter 1](./preparation.mdx) supplies the default detector
 
 1. Keep `doclayoutyolo` as the detector for the initial workflow so that the commands match the recorded example.
 2. Keep `cpu` as the device. This avoids assuming that a compatible GPU and runtime are available.
-3. Continue to [snapshot extraction](./snapshots.mdx) once the detector and device are selected. The optional choices below can be considered after the default outputs have been reviewed.
+3. Review the outputs from [snapshot extraction](./snapshots.mdx) before trying the optional choices below.
 
-**Worked example.** The recorded exercise used DocLayout-YOLO on CPU. It saved seven figure-labelled candidate images and one table-labelled candidate image, including a cover photograph. The next chapter identifies the chart and table selected from that candidate set. Other detector and device choices were not evaluated for this guide.
+**Worked example.** The recorded exercise used DocLayout-YOLO on CPU. It saved seven figure-labelled candidate images and one table-labelled candidate image, including a cover photograph. [Chapter 2](./snapshots.mdx) identifies the chart and table selected from that candidate set. Other detector and device choices were not evaluated for this guide.
 
 <details>
 <summary>Optional detectors and GPU devices</summary>
@@ -75,7 +75,7 @@ Device selection controls local PDF detection. Remote metadata inference uses th
 
 </Recipe>
 
-<Recipe title="2.2 Confirm the metadata preset and configure alternatives" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect the preset; changes require additional compatibility checks">
+<Recipe title="7.2 Confirm the metadata preset and configure alternatives" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect the preset; changes require additional compatibility checks">
 
 **Result:** The selected provider preset names the intended model and compatible request settings.
 
@@ -85,7 +85,7 @@ Metadata presets are separate from `config/models.json`, which holds detector we
 
 1. Inspect `src/ai4data/data_snapshot/metadata_extraction/config/openrouter.json` in the checkout and confirm that it is the preset intended for the example.
 2. Keep its model and request settings unchanged for the initial workflow. The configuration below shows the default production preset.
-3. Continue with the separate extraction stages in [chapter 3](./snapshots.mdx) and [chapter 4](./metadata.mdx). Optional provider and model changes are described in the collapsible section below.
+3. Compare these settings with the separate extraction stages in [chapter 2](./snapshots.mdx) and [chapter 3](./metadata.mdx). Optional provider and model changes are described in the collapsible section below.
 
 The current OpenRouter preset is embedded from the production file:
 

@@ -1,15 +1,15 @@
 ---
 id: operation
-title: "7. Recovery and controlled execution"
-sidebar_label: "7. Recovery and controlled execution"
-sidebar_position: 8
+title: "6. Recovery and controlled execution"
+sidebar_label: "6. Recovery and controlled execution"
+sidebar_position: 7
 description: This chapter explains partial failures, stage-specific recovery, safe replacement, and control of metadata request volume.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 7. Recovery and controlled execution
+# 6. Recovery and controlled execution
 
 **Question:** How can the pipeline be operated reliably?
 
@@ -38,7 +38,7 @@ The staged run for the sample PDF used in the tutorial has eight candidate image
 
 ## Recipes
 
-<Recipe title="7.1 Resume or replace the correct stage" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect a partial run and choose recovery">
+<Recipe title="6.1 Resume or replace the correct stage" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to inspect a partial run and choose recovery">
 
 **Result:** The operator can rerun a stage without confusing skip and replacement behavior.
 
@@ -55,13 +55,13 @@ The correct recovery command depends on which files already exist. A fresh outpu
 3. Use a new destination when comparing settings. If replacement is intended, preserve any needed previous results before `--force`.
 4. Expect forced deletion to occur before model loading or replacement succeeds. Failure does not restore the old files.
 
-**Worked example.** After the snapshot-only run for the sample PDF, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in [chapter 4](./metadata.mdx) are the appropriate way to enrich selected images. The remaining candidate images intentionally have no metadata.
+**Worked example.** After the snapshot-only run for the sample PDF, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in [chapter 3](./metadata.mdx) are the appropriate way to enrich selected images. The remaining candidate images intentionally have no metadata.
 
 **What this does not do.** The package does not automatically resume missing pages, retry failed requests, or maintain a job ledger. An empty-detection PDF has no completion marker and can be processed again.
 
 </Recipe>
 
-<Recipe title="7.2 Record settings and bound paid work" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to document settings and plan request volume">
+<Recipe title="6.2 Record settings and bound paid work" level="AI-ready" skills="Developer and data curator" time="Fifteen minutes to document settings and plan request volume">
 
 **Result:** A future reader can identify the configuration and the operator can limit request volume.
 
