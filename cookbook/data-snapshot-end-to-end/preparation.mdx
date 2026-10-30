@@ -15,14 +15,14 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-A data snapshot is a bounded region of a document page containing information that can be interpreted analytically or reused operationally. Statistical tables, charts, analytical maps, and monitoring dashboards can qualify. A photograph, logo, or formatting table can be a layout object without being a useful data snapshot. A complete snapshot may need its title, legend, units, caption, or notes to remain understandable.
+A data snapshot is a bounded region of a document page containing information that can be interpreted analytically or reused operationally. Statistical tables, charts, analytical maps, and monitoring dashboards are common examples. A complete snapshot needs its title, legend, units, caption, or notes to remain understandable.
 
-The production package renders PDF pages, detects candidate regions, and saves data snapshots. A separate vision-language model describes the image in structured semantic metadata. These stages produce images and descriptions. Numerical observations still require a separate extraction and verification workflow. Source documents and run settings must be retained so that a curator can assess the result.
+The production package renders PDF pages, detects candidate regions, and saves data snapshots. A separate vision-language model describes the image in structured semantic metadata. These stages produce image and metadata files. Extracting data and numerical observations from snapshots is a separate workflow.
 
 ## Target state
 
-- The source PDF is available locally and its origin is recorded.
-- An isolated Python environment contains only the detector and metadata dependencies needed for the exercise.
+- The source PDF is available locally.
+- An isolated Python environment with the detector and metadata dependencies needed for the exercise.
 
 ## Maturity levels
 
@@ -67,18 +67,23 @@ python -m pip install ".[data-snapshot,data-snapshot-metadata]"
 
 1. Activate an isolated Python environment before installation. Reinstall a normal source installation after changing Python or configuration files.
 2. Run `python -m ai4data.data_snapshot.extract_data_snapshot --help` and inspect `--model`, `--device`, `--dpi`, and `--output-dir`.
-3. For metadata requests, set `OPENROUTER_API_KEY` in the environment or the working directory's `.env`. Select OpenAI with `--metadata-provider=openai` and set `OPENAI_API_KEY` instead. Only the selected key is needed. Exported variables take precedence over `.env`.
+3. For metadata requests, configure the selected provider's credentials:
+
+   - For the default OpenRouter provider, set `OPENROUTER_API_KEY` in the environment or the working directory's `.env`.
+   - To use OpenAI instead, select it with `--metadata-provider=openai` and set `OPENAI_API_KEY`.
+   - Only the selected provider's key is needed. Exported variables take precedence over `.env`.
+
 4. Keep credentials outside downloadable examples and version control. Metadata requests send the data snapshot to the selected external provider and consume credits; local snapshot detection makes no metadata requests.
 
-**Worked example.** The recorded run used DocLayout-YOLO 0.0.4 with cached default DocStructBench weights and CPU inference. Its rendering resolution was 300 dots per inch (DPI), which specifies the density of pixels used to represent the PDF page. The source-installation path is used because the module README warns that `ai4data==0.1.0` lacks these extras.
+**Worked example.** The recorded run used DocLayout-YOLO 0.0.4 with cached default DocStructBench weights and CPU inference. Its rendering resolution was 300 dots per inch (DPI), which specifies the density of pixels used to represent the PDF page. The source-installation path is used because the extras are not yet part of the official release.
 
-**What this does not do.** Installation and help checks do not validate detection quality or external model availability. Model weights can download on the first inference run.
+**What this does not do.** Installation and help checks do not validate detection quality or external model availability. Model weights will download on the first inference run.
 
 </Recipe>
 
 ## Implementation options
 
-Snapshot-only work can omit `data-snapshot-metadata`. Metadata from existing images needs only `data-snapshot-metadata`. The `data-snapshot-core` extra is sufficient for schema validation and PDF/image utilities without a detector or provider SDK.
+If working with snapshot extraction only, `data-snapshot-metadata` may be omitted. Conversely, if images are already present, data snapshot extraction may be skipped and only install `data-snapshot-metadata`. The `data-snapshot-core` extra is sufficient for schema validation and PDF/image utilities without a detector or provider SDK.
 
 ## Resources
 
@@ -88,8 +93,7 @@ Snapshot-only work can omit `data-snapshot-metadata`. Metadata from existing ima
 
 ## Common mistakes
 
-- Using a different PDF without recording the change makes data snapshot comparisons unreliable.
-- Installing all detector stacks together can introduce avoidable dependency conflicts.
+- Installing all detector stacks together can introduce avoidable dependency conflicts. Consult the [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) for detailed installation guidance.
 - Sending every page to a paid provider bypasses the data snapshot-review step and increases request volume.
 
 ## Verification
