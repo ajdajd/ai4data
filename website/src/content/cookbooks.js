@@ -11,7 +11,7 @@ export const allCookbooks = [
     audience: 'Developers and data curators working with institutional PDFs',
     title: 'Practical Guide to the Data Snapshot End-to-End Workflow',
     description:
-      'Eight chapters cover PDF preparation, model selection, snapshot extraction, semantic metadata, output review, combined execution, safe recovery, and a proposed improvement roadmap, using actual Shona policy-brief crops and two selected metadata requests.',
+      'Eight chapters cover PDF preparation, model selection, snapshot extraction, semantic metadata, output review, combined execution, safe recovery, and a proposed improvement roadmap, using data snapshots from the sample PDF used in the tutorial and two selected metadata requests.',
     chapters: 8,
     to: '/cookbook/data-snapshot-end-to-end/',
   },

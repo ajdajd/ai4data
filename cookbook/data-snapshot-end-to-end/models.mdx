@@ -15,9 +15,9 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-Detection and metadata extraction answer different questions. A layout detector proposes where a figure or table lies; a metadata model describes what is visible inside its crop. A strong description cannot recover a title or footnote that detection excluded. Selecting each stage therefore requires reviewing its own failure modes.
+Detection and metadata extraction answer different questions. A layout detector proposes where a figure or table lies; a metadata model describes what is visible inside its data snapshot. A strong description cannot recover a title or footnote that detection excluded. Selecting each stage therefore requires reviewing its own failure modes.
 
-The worked example uses DocLayout-YOLO on CPU and the existing OpenRouter metadata preset. No alternative detector or model is needed to complete the initial workflow. The recipes establish those settings first, then explain the optional choices for a different runtime or provider. Later changes should be assessed on the organization's documents, including the review burden created by irrelevant or incomplete crops.
+The worked example uses DocLayout-YOLO on CPU and the existing OpenRouter metadata preset. No alternative detector or model is needed to complete the initial workflow. The recipes establish those settings first, then explain the optional choices for a different runtime or provider. Later changes should be assessed on the organization's documents, including the review burden created by irrelevant or incomplete data snapshots.
 
 ## Target state
 
@@ -33,7 +33,7 @@ The worked example uses DocLayout-YOLO on CPU and the existing OpenRouter metada
 | **AI-native** | An organizational process monitors model-assisted output and proposes configuration changes for human review against agreed quality criteria. Such monitoring is additional integration work. |
 
 :::info[Running example]
-The recorded Shona workflow uses DocLayout-YOLO on CPU and the unchanged packaged OpenRouter metadata preset. These defaults are sufficient to continue to extraction. Alternative detectors, GPU devices, and provider settings are optional paths; they were not evaluated for this example.
+The recorded workflow for the sample PDF used in the tutorial uses DocLayout-YOLO on CPU and the unchanged packaged OpenRouter metadata preset. These defaults are sufficient to continue to extraction. Alternative detectors, GPU devices, and provider settings are optional paths; they were not evaluated for this example.
 :::
 
 ## Recipes
@@ -42,13 +42,13 @@ The recorded Shona workflow uses DocLayout-YOLO on CPU and the unchanged package
 
 **Result:** The extraction command names a supported detector and a device available on the machine.
 
-The installation in [chapter 1](./preparation.mdx) supplies the default detector. The arguments `--model=doclayoutyolo --device=cpu` select DocLayout-YOLO and local CPU inference. The detector proposes candidate regions; its confidence score does not establish whether each crop is analytically useful.
+The installation in [chapter 1](./preparation.mdx) supplies the default detector. The arguments `--model=doclayoutyolo --device=cpu` select DocLayout-YOLO and local CPU inference. The detector proposes candidate regions; its confidence score does not establish whether each data snapshot is analytically useful.
 
 1. Keep `doclayoutyolo` as the detector for the initial workflow so that the commands match the recorded example.
 2. Keep `cpu` as the device. This avoids assuming that a compatible GPU and runtime are available.
 3. Continue to [snapshot extraction](./snapshots.mdx) once the detector and device are selected. The optional choices below can be considered after the default outputs have been reviewed.
 
-**Worked example.** The recorded exercise used DocLayout-YOLO on CPU. It saved seven figure-labelled crops and one table-labelled crop, including a cover photograph. The next chapter identifies the chart and table selected from that candidate set. Other detector and device choices were not evaluated for this guide.
+**Worked example.** The recorded exercise used DocLayout-YOLO on CPU. It saved seven figure-labelled candidate images and one table-labelled candidate image, including a cover photograph. The next chapter identifies the chart and table selected from that candidate set. Other detector and device choices were not evaluated for this guide.
 
 <details>
 <summary>Optional detectors and GPU devices</summary>
@@ -109,7 +109,7 @@ The OpenAI alternative is also a packaged preset:
 
 </details>
 
-**Worked example.** The selected requests use the unchanged OpenRouter preset. Larger output allowances may avoid truncation for complex records but can permit more output tokens; model quality, latency, price, and schema adherence require assessment on reviewed crops.
+**Worked example.** The selected requests use the unchanged OpenRouter preset. Larger output allowances may avoid truncation for complex records but can permit more output tokens; model quality, latency, price, and schema adherence require assessment on reviewed data snapshots.
 
 **What this does not do.** Selecting or editing a preset does not change the metadata schema or prompt contract. It provides no universal model recommendation and makes no provider-price claim. Automatic retries are disabled.
 

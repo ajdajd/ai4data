@@ -17,7 +17,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 The package has conservative skip rules and destructive forced replacement. These rules prevent accidental overwrites during ordinary reruns, but they do not prove that an existing run is complete. A single matching output is enough to skip a PDF, and an existing metadata JSON is skipped without checking whether it is valid.
 
-Operational reliability therefore depends on checking output completeness and choosing the right stage for recovery. Requests are sequential, retries are disabled, and the metadata writer stops after the first failed image. Earlier crops and completed JSON records remain available for inspection and selective continuation.
+Operational reliability therefore depends on checking output completeness and choosing the right stage for recovery. Requests are sequential, retries are disabled, and the metadata writer stops after the first failed image. Earlier data snapshots and completed JSON records remain available for inspection and selective continuation.
 
 ## Target state
 
@@ -33,7 +33,7 @@ Operational reliability therefore depends on checking output completeness and ch
 | **AI-native** | An organization monitors failures and usage and adds controlled recovery with human oversight. Scheduling, retry orchestration, and spending enforcement require additional implementation. |
 
 :::info[Running example]
-The staged Shona run has eight candidate crops and metadata for only the selected chart and table. This intentionally partial set explains why a combined rerun in the same root would skip the PDF, while metadata-only execution is the appropriate path for missing selected records.
+The staged run for the sample PDF used in the tutorial has eight candidate images and metadata for only the selected chart and table. This intentionally partial set explains why a combined rerun in the same root would skip the PDF, while metadata-only execution is the appropriate path for missing selected records.
 :::
 
 ## Recipes
@@ -46,8 +46,8 @@ The correct recovery command depends on which files already exist. A fresh outpu
 
 | Command | Ordinary rerun | Forced rerun |
 |---|---|---|
-| Snapshot-only | Skips a PDF if any matching crop or metadata exists. | Deletes matching crops and metadata, then extracts crops. |
-| Combined | Uses the same PDF-level skip rule. | Deletes matching crops and metadata, then runs both stages. |
+| Snapshot-only | Skips a PDF if any matching data snapshot or metadata exists. | Deletes matching data snapshots and metadata, then extracts data snapshots. |
+| Combined | Uses the same PDF-level skip rule. | Deletes matching data snapshots and metadata, then runs both stages. |
 | Metadata-only | Skips each image with an existing JSON. | Deletes that JSON before attempting replacement and preserves the image. |
 
 1. Inspect missing or invalid records before choosing a command. A successful skip is not a completeness check.
@@ -55,7 +55,7 @@ The correct recovery command depends on which files already exist. A fresh outpu
 3. Use a new destination when comparing settings. If replacement is intended, preserve any needed previous results before `--force`.
 4. Expect forced deletion to occur before model loading or replacement succeeds. Failure does not restore the old files.
 
-**Worked example.** After the snapshot-only Shona run, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in [chapter 4](./metadata.mdx) are the appropriate way to enrich selected images. The remaining crops intentionally have no metadata.
+**Worked example.** After the snapshot-only run for the sample PDF, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in [chapter 4](./metadata.mdx) are the appropriate way to enrich selected images. The remaining candidate images intentionally have no metadata.
 
 **What this does not do.** The package does not automatically resume missing pages, retry failed requests, or maintain a job ledger. An empty-detection PDF has no completion marker and can be processed again.
 
@@ -68,7 +68,7 @@ The correct recovery command depends on which files already exist. A fresh outpu
 The source links and worked examples in this guide state what was processed and which settings were used.
 
 1. Note the source publication, detector, device, DPI, metadata model, and selected outputs alongside the example.
-2. Inspect and select crops before paid metadata extraction. Per-image commands bound the number of attempts; the combined command does not offer a spending cap or candidate selection.
+2. Inspect and select data snapshots before paid metadata extraction. Per-image commands bound the number of attempts; the combined command does not offer a spending cap or candidate selection.
 3. Record actual provider billing separately if cost measurements are needed. Token usage is available through the Python `ExtractionResult` when returned by the provider, but ordinary JSON output files do not retain it.
 4. Check the provider preset before a rerun. Changing the model or its settings can change its response and billing.
 
@@ -90,7 +90,7 @@ The Python metadata API returns structured errors, including incomplete-response
 
 ## Common mistakes
 
-- Using a PDF command with `--force` to fill missing metadata deletes working crops. Metadata-only recovery avoids that deletion.
+- Using a PDF command with `--force` to fill missing metadata deletes working data snapshots. Metadata-only recovery avoids that deletion.
 - Assuming skipped JSON is valid hides corrupted or obsolete records.
 - Publishing a dollar estimate without billing evidence confuses configuration limits with measured cost.
 

@@ -3,7 +3,7 @@ id: metadata
 title: "4. Semantic metadata extraction"
 sidebar_label: "4. Semantic metadata extraction"
 sidebar_position: 5
-description: This chapter generates semantic metadata for two selected crops and validates the raw JSON records against the production schema.
+description: This chapter generates semantic metadata for two selected data snapshots and validates the raw JSON records against the production schema.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -11,11 +11,11 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 # 4. Semantic metadata extraction
 
-**Question:** How is a crop described in structured metadata?
+**Question:** How is a data snapshot described in structured metadata?
 
 ## Rationale
 
-The two crops selected in [chapter 3](./snapshots.mdx) are the inputs to the metadata stage. This stage uses a vision-language model, which processes an image together with text instructions. The production prompt asks for evidence visible in that image and excludes filenames and parent-document metadata. Its response is validated against the canonical Data Snapshot Metadata Schema v1.4 before a JSON file is saved.
+The two data snapshots selected in [chapter 3](./snapshots.mdx) are the inputs to the metadata stage. This stage uses a vision-language model, which processes an image together with text instructions. The production prompt asks for evidence visible in that image and excludes filenames and parent-document metadata. Its response is validated against the canonical Data Snapshot Metadata Schema v1.4 before a JSON file is saved.
 
 Metadata fields describe analytical meaning: measured variables, their units, grouping dimensions, temporal coverage, visible sources, and related context. They do not hold a reconstructed numerical dataset. Missing and null fields represent unavailable information; validation cannot establish that the model interpreted the image correctly.
 
@@ -28,7 +28,7 @@ Metadata fields describe analytical meaning: measured variables, their units, gr
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator describes visible variables, units, groups, and missing context in notes alongside a crop. |
+| **Foundational** | A curator describes visible variables, units, groups, and missing context in notes alongside a data snapshot. |
 | **AI-ready** | The selected images receive schema-constrained model descriptions, and the raw JSON records are validated and interpreted separately from numerical observations. |
 | **AI-native** | An organization integrates model-assisted metadata generation with validation and human review before reuse. Additional integration is needed to monitor semantic quality and manage corrections. |
 
@@ -38,11 +38,11 @@ Only the chart `figure_001` and table `table_000` selected in chapter 3 are subm
 
 ## Recipes
 
-<Recipe title="4.1 Generate metadata for selected crops" level="AI-ready" skills="Developer and data curator" time="Ten minutes to select and submit the images; provider waiting time varies">
+<Recipe title="4.1 Generate metadata for selected data snapshots" level="AI-ready" skills="Developer and data curator" time="Ten minutes to select and submit the images; provider waiting time varies">
 
 **Result:** Each selected image has one validated JSON record.
 
-Using an individual image as input keeps the paid example bounded. The following two commands send the reviewed figure and table separately. The explicit output directory places their matching JSON files beside the snapshot directory. The remaining six candidate crops are outside this two-image request scope.
+Using an individual image as input keeps the paid example bounded. The following two commands send the reviewed figure and table separately. The explicit output directory places their matching JSON files beside the snapshot directory. The remaining six candidate images are outside this two-image request scope.
 
 ```bash
 python -m ai4data.data_snapshot.extract_metadata \
@@ -59,11 +59,11 @@ python -m ai4data.data_snapshot.extract_metadata \
 ```
 
 1. Review the selected provider preset and key before running the commands.
-2. Submit only the two selected crops. Passing the whole `snapshots` directory instead would process every discovered image, including the cover photograph.
+2. Submit only the two selected data snapshots. Passing the whole `snapshots` directory instead would process every discovered image, including the cover photograph.
 3. Check that each JSON basename exactly matches its PNG basename. The final JSON contains the metadata record. API response details are available separately through the Python API.
 4. Preserve the raw model records and keep human review notes separately.
 
-**Worked example.** The downloadable figure and table JSON files are raw outputs from separate metadata-only requests on the actual DocLayout-YOLO crops. The combined command was not run. The review observations below describe their limitations; the raw JSON is unchanged.
+**Worked example.** The downloadable figure and table JSON files are raw outputs from separate metadata-only requests on the actual DocLayout-YOLO data snapshots. The combined command was not run. The review observations below describe their limitations; the raw JSON is unchanged.
 
 **What this does not do.** Requests consume provider credits even when a result is unsuitable. No automatic retry or correction is applied. Existing JSON files are skipped without revalidation.
 
@@ -85,11 +85,11 @@ python inspect_metadata.py policy_brief_on_shona_community_from_stateless_to_cit
 1. Download the helper and selected JSON into the same working directory and run the command.
 2. Inspect `variables` for measured concepts and units, `dimensions` for population groups or year columns, and `visualization_types` for the represented form.
 3. Distinguish source wording in `source_text` from a controlled representation in `normalized_value`. A normalized interpretation must not be passed off as printed wording.
-4. Open the full [figure JSON](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json) and [table JSON](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json). Compare them with the actual crops and the [schema reference](/docs/data-snapshots/metadata-schema/).
+4. Open the full [figure JSON](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.json) and [table JSON](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.json). Compare them with the actual data snapshots and the [schema reference](/docs/data-snapshots/metadata-schema/).
 
-**Worked example.** The figure record identifies employed and unemployed populations and the two population groups. Its `title` is `Percent of population`, which is visibly the vertical-axis label. The chart caption is outside the crop. The record can validate while this field remains questionable. The model's geographical coverage is null; the document's Kenya context was not provided as extra evidence.
+**Worked example.** The figure record identifies employed and unemployed populations and the two population groups. Its `title` is `Percent of population`, which is visibly the vertical-axis label. The chart caption is outside the data snapshot. The record can validate while this field remains questionable. The model's geographical coverage is null; the document's Kenya context was not provided as extra evidence.
 
-The table's `title` is `null`, while its metadata identifies variables such as `Median age` and `Mean household size`, a `Year` dimension with 2019 and 2024 categories, and `table` as the visualization type. Its printed caption and source are outside the crop, but that observation does not establish why the model returned a null title. The table illustrates missing title metadata alongside useful descriptions; the figure illustrates a questionable inference from an axis label. Inspecting each crop alongside its JSON distinguishes an unpopulated field from a populated field that misinterprets visible text.
+The table's `title` is `null`, while its metadata identifies variables such as `Median age` and `Mean household size`, a `Year` dimension with 2019 and 2024 categories, and `table` as the visualization type. Its printed caption and source are outside the data snapshot, but that observation does not establish why the model returned a null title. The table illustrates missing title metadata alongside useful descriptions; the figure illustrates a questionable inference from an axis label. Inspecting each data snapshot alongside its JSON distinguishes an unpopulated field from a populated field that misinterprets visible text.
 
 The recorded responses can be inspected below without running the provider again. Both blocks are imported from the downloadable raw JSON files.
 
@@ -113,7 +113,7 @@ The recorded responses can be inspected below without running the provider again
 
 </Recipe>
 
-The raw JSON records and the selected crops are now ready for [chapter 5](./review.mdx), which examines relevance, missing context, and questionable field interpretations together. The records remain unchanged during that review.
+The raw JSON records and the selected data snapshots are now ready for [chapter 5](./review.mdx), which examines relevance, missing context, and questionable field interpretations together. The records remain unchanged during that review.
 
 ## Implementation options
 
@@ -127,7 +127,7 @@ The top-level Python `extract_metadata(image_path, config_path=...)` returns an 
 
 ## Common mistakes
 
-- Substituting the existing human-reviewed gold chart record would hide the production crop and model behavior.
+- Substituting the existing human-reviewed gold chart record would hide the production data snapshot and model behavior.
 - Equating schema validation with factual verification leaves interpretation errors undetected.
 - Filling image-invisible context from the PDF without labelling the intervention breaks the stated evidence boundary.
 
@@ -135,12 +135,12 @@ The top-level Python `extract_metadata(image_path, config_path=...)` returns an 
 
 - Match each selected PNG to a JSON file with exactly the same stem in the metadata directory. The recorded exercise has two selected-image responses; the remaining detector candidates intentionally have no metadata.
 - Run `inspect_metadata.py` on each downloaded JSON. A zero exit status and a display of populated fields indicate that the record satisfies the canonical model; the script should leave the input file unchanged.
-- Compare the figure response with the crop. Confirm that `title` contains the axis label `Percent of population` and retain this finding for the review in chapter 5.
+- Compare the figure response with the data snapshot. Confirm that `title` contains the axis label `Percent of population` and retain this finding for the review in chapter 5.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-metadata" items={[
-  "Each of the two selected crops has a matching raw JSON record.",
+  "Each of the two selected data snapshots has a matching raw JSON record.",
   "Both records have been validated locally.",
   "The questionable figure title is flagged in review notes while the raw JSON is preserved.",
   "Schema validity and interpretation of visible content are treated as separate checks."

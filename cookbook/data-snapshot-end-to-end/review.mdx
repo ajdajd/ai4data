@@ -1,39 +1,39 @@
 ---
 id: review
-title: "5. Crop and metadata review"
-sidebar_label: "5. Crop and metadata review"
+title: "5. Data snapshot and metadata review"
+sidebar_label: "5. Data snapshot and metadata review"
 sidebar_position: 6
-description: This chapter compares crops and raw metadata with the source and illustrates how a curator can note findings and possible next steps.
+description: This chapter compares data snapshots and raw metadata with the source and illustrates how a curator can note findings and possible next steps.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 5. Crop and metadata review
+# 5. Data snapshot and metadata review
 
 **Question:** Are the extracted outputs fit for use?
 
 ## Rationale
 
-A useful review asks two separate questions: whether the crop preserves the analytical artifact, and whether the metadata accurately describes the available evidence. A schema check answers neither question on its own. Detection can find the right region while excluding the title, or can find a photograph that is irrelevant to analytical extraction.
+A useful review asks two separate questions: whether the data snapshot preserves the analytical artifact, and whether the metadata accurately describes the available evidence. A schema check answers neither question on its own. Detection can find the right region while excluding the title, or can find a photograph that is irrelevant to analytical extraction.
 
-Review should preserve the distinction between raw outputs and human decisions. A curator can reject a candidate, request a revised crop, or correct metadata, but the original output and the reason for intervention must remain traceable. The package currently provides files for this process. A built-in review application is not implemented.
+Review should preserve the distinction between raw outputs and human decisions. A curator can reject a candidate, request a revised data snapshot, or correct metadata, but the original output and the reason for intervention must remain traceable. The package currently provides files for this process. A built-in review application is not implemented.
 
 ## Target state
 
-- The selected artifacts have documented crop and metadata limitations.
+- The selected artifacts have documented data snapshot and metadata limitations.
 - Review decisions remain separate from unmodified raw model records.
 
 ## Maturity levels
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A curator opens crops and metadata beside the source pages and notes missing context or questionable interpretations. |
-| **AI-ready** | Review distinguishes candidate relevance, crop completeness, and metadata correctness, with observations kept separate from raw model outputs. |
+| **Foundational** | A curator opens data snapshots and metadata beside the source pages and notes missing context or questionable interpretations. |
+| **AI-ready** | Review distinguishes candidate relevance, data snapshot completeness, and metadata correctness, with observations kept separate from raw model outputs. |
 | **AI-native** | An organization uses model-assisted prioritization and repeated quality checks to direct human attention to uncertain outputs. This is an organizational practice that would require additional tooling. |
 
 :::info[Running example]
-Review brings together the photograph detected as a figure, the selected crops that omit their captions and sources, and the chart response that treats an axis label as a title. The example notes suggest possible next steps without changing the files or claiming formal adjudication.
+Review brings together the photograph detected as a figure, the selected data snapshots that omit their captions and sources, and the chart response that treats an axis label as a title. The example notes suggest possible next steps without changing the files or claiming formal adjudication.
 :::
 
 ## Recipes
@@ -44,12 +44,12 @@ Review brings together the photograph detected as a figure, the selected crops t
 
 A review of saved files alone cannot discover every missed artifact. The source page is needed to count relevant regions and inspect their boundaries. Detection precision concerns accepted analytical candidates; recall concerns analytical artifacts that should have been found.
 
-1. Compare all source pages with the crop inventory when assessing coverage. Inspect the selected page at [full size](pathname:///cookbook-files/data-snapshot-end-to-end/shona-page-4.webp).
+1. Compare all source pages with the candidate image inventory when assessing coverage. Inspect the selected page at [full size](pathname:///cookbook-files/data-snapshot-end-to-end/shona-page-4.webp).
 2. Check titles, row and column headings, scales, legends, footnotes, and sources for truncation or omission.
 3. Identify irrelevant candidates, split composites, merged adjacent artifacts, and small analytical regions removed by filtering.
-4. Note material findings and a possible next step in ordinary review notes. Keep the original filename and crop available so that the observation can be checked.
+4. Note material findings and a possible next step in ordinary review notes. Keep the original filename and data snapshot available so that the observation can be checked.
 
-**Worked example.** The Shona cover photograph is labelled `figure` by the layout detector, yet it is not an analytical data snapshot. On PDF page 4, the selected chart and table are analytical, but their captions lie outside the crops. Both limitations were observed in the recorded run.
+**Worked example.** The cover photograph in the sample PDF is labelled `figure` by the layout detector, yet it is not an analytical data snapshot. On PDF page 4, the selected chart and table are analytical, but their captions lie outside the data snapshots. Both limitations were observed in the recorded run.
 
 **What this does not do.** A review of this single PDF does not yield a transferable precision or recall estimate. The detection benchmark evaluates layout extraction. The current metadata provider requires separate evaluation.
 
@@ -59,23 +59,23 @@ A review of saved files alone cannot discover every missed artifact. The source 
 
 **Result:** The curator can explain which metadata fields need attention and how each finding relates to the image.
 
-The image boundary determines what the model can observe. A document title, country, date, or source outside that boundary should not be silently supplied as though it was extracted from the crop. External document context can be retained in a separate, clearly sourced record.
+The image boundary determines what the model can observe. A document title, country, date, or source outside that boundary should not be silently supplied as though it was extracted from the data snapshot. External document context can be retained in a separate, clearly sourced record.
 
 1. Run the metadata validator before semantic review so that representation errors are separated from interpretation problems.
-2. Check each non-null field against the crop, especially titles, units, percentages, time ranges, and roles.
+2. Check each non-null field against the data snapshot, especially titles, units, percentages, time ranges, and roles.
 3. Record whether an absent field reflects missing context, model omission, or a genuinely inapplicable concept.
 4. Keep proposed corrections in the review notes. Publish a corrected reference only with its review status and derivation stated.
 
-**Worked example.** The figure's raw metadata assigns the axis label `Percent of population` to `title`. A curator should flag it as an inappropriate title and note that the actual caption is outside the crop. The existing Shona gold example in the [schema reference](/docs/data-snapshots/metadata-schema/) describes a different, human-reviewed artifact and must not replace this response without disclosure.
+**Worked example.** The figure's raw metadata assigns the axis label `Percent of population` to `title`. A curator should flag it as an inappropriate title and note that the actual caption is outside the data snapshot. The existing gold example for the sample PDF in the [schema reference](/docs/data-snapshots/metadata-schema/) describes a different, human-reviewed artifact and must not replace this response without disclosure.
 
 The following notes illustrate how a curator could connect these observations to possible next steps. They are suggestions for this example and do not prescribe a review format, production status, or approval process. The downloadable artifacts remain unchanged, and these notes do not represent formally adjudicated decisions.
 
 | Material | Observation from inspection | Possible next step |
 |---|---|---|
 | Cover photograph, `figure_000` | The detector labels the photograph as a figure, but it contains no analytical chart or table. | Exclude this candidate from the selected metadata requests while retaining the original detector output. |
-| Chart crop, `figure_001` | The chart and legend are present; the printed caption and source note are outside the crop. | Flag the missing context and consult PDF page 4 before deciding whether a revised crop is needed. |
+| Chart data snapshot, `figure_001` | The chart and legend are present; the printed caption and source note are outside the data snapshot. | Flag the missing context and consult PDF page 4 before deciding whether a revised data snapshot is needed. |
 | Raw chart JSON | The `title` field contains the vertical-axis label `Percent of population`. | Flag the title interpretation and keep any proposed correction separate from the raw response. |
-| Table crop, `table_000` | The five rows and two year columns are present; the caption and source note are outside the crop. | Note the omitted context and assess whether the intended use needs a revised crop. |
+| Table data snapshot, `table_000` | The five rows and two year columns are present; the caption and source note are outside the data snapshot. | Note the omitted context and assess whether the intended use needs a revised data snapshot. |
 
 **What this does not do.** The helper cannot adjudicate semantic roles or verify external registries. Numerical observations are outside the schema and this cookbook.
 
@@ -95,20 +95,20 @@ A curator can use ordinary notes to relate observations to possible next steps; 
 
 ## Common mistakes
 
-- Reviewing only successful crops conceals missed artifacts.
+- Reviewing only successful data snapshots conceals missed artifacts.
 - Correcting the downloaded raw JSON without preserving its original destroys the model-output evidence.
 - Treating a null country field as an error ignores the image-only contract.
 
 ## Verification
 
 - Compare the candidate inventory with the source PDF. The cover photograph should be recognized as a layout figure that does not meet the analytical definition of a data snapshot.
-- Open the two selected crops beside PDF page 4. Both should show their main analytical content, while their printed captions and sources are visible only on the page.
+- Open the two selected data snapshots beside PDF page 4. Both should show their main analytical content, while their printed captions and sources are visible only on the page.
 - Compare the chart JSON with the chart image. The axis-label title interpretation should be identifiable without editing the raw response; any proposed correction should remain distinguishable from model output.
 
 ## Checklist
 
 <Checklist id="data-snapshot-end-to-end-review" items={[
   "Irrelevant candidate content has been identified.",
-  "Missing crop context has been noted.",
+  "Missing data snapshot context has been noted.",
   "Human observations and suggested next steps remain separate from the raw outputs."
 ]} />

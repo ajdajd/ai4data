@@ -15,7 +15,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-The production pipeline is a useful baseline for producing candidate crops and semantic descriptions. The Shona example shows two gaps directly: layout classes admit a decorative photograph, and detected boxes can exclude captions. Neither more detailed metadata nor a larger output budget fixes the first-stage evidence boundary.
+The production pipeline is a useful baseline for producing candidate data snapshots and semantic descriptions. The results for the sample PDF used in the tutorial show two gaps directly: layout classes admit a decorative photograph, and detected boxes can exclude captions. Neither more detailed metadata nor a larger output budget fixes the first-stage evidence boundary.
 
 The following roadmap is proposed work. It separates filtering candidates, improving boundaries, and assessing metadata so that a gain in one area is not mistaken for a complete solution. Human review remains necessary when defining analytical relevance and judging borderline artifacts.
 
@@ -33,19 +33,19 @@ The following roadmap is proposed work. It separates filtering candidates, impro
 | **AI-native** | An organization uses accumulated review findings and automated evaluations to propose updates for human approval. This describes an improvement process; it does not imply that the proposed classifier is implemented. |
 
 :::info[Running example]
-The Shona photograph motivates a proposed analytical relevance classifier, while the missing captions motivate boundary improvements. The chart title finding provides a metadata-quality case. These examples define problems to investigate without establishing a training set or a demonstrated improvement.
+The cover photograph in the sample PDF motivates a proposed analytical relevance classifier, while the missing captions motivate boundary improvements. The chart title finding provides a metadata-quality case. These examples define problems to investigate without establishing a training set or a demonstrated improvement.
 :::
 
 ## Recipes
 
 <Recipe title="8.1 Design a second-stage analytical relevance classifier" level="AI-native" skills="Developer and data curator" time="Half a day to draft the classifier proposal; data collection and experiments are additional">
 
-**Result:** The organization has a reviewable proposal for filtering irrelevant candidate crops.
+**Result:** The organization has a reviewable proposal for filtering irrelevant candidate data snapshots.
 
 A second-stage classifier would examine regions proposed by the layout detector and predict whether they contain analytically useful information. It would sit between cropping and paid metadata generation. It is not implemented in the production package or invoked by any command in this guide.
 
 1. Collect reviewed positive and negative candidates across institutional document types. Include charts, statistical and financing tables, maps, composites, photographs, logos, tables of contents, and formatting grids. Keep ambiguous cases for adjudication.
-2. Split development and evaluation data by source document to reduce leakage between related crops. Record inclusion rules and label provenance.
+2. Split development and evaluation data by source document to reduce leakage between related data snapshots. Record inclusion rules and label provenance.
 3. Compare a small image classifier or vision-language classifier with the unfiltered detector baseline. Tune a rejection threshold on development data and retain uncertain cases for human review.
 4. Measure precision gain, analytical snapshots incorrectly rejected, overall recall after both stages, latency, and downstream request volume on held-out documents. Fix the acceptable recall loss before evaluating the final candidate.
 
@@ -59,22 +59,22 @@ A second-stage classifier would examine regions proposed by the layout detector 
 
 **Result:** A proposed update has a bounded test and a recorded acceptance decision.
 
-Model releases and better academic benchmark results motivate investigation. Replacing a tested institutional workflow requires local evidence. The organization needs evaluation evidence connected to its document types and to the use of the final crops.
+Model releases and better academic benchmark results motivate investigation. Replacing a tested institutional workflow requires local evidence. The organization needs evaluation evidence connected to its document types and to the use of the final data snapshots.
 
 | Priority | Proposed change | Evidence needed before adoption |
 |---|---|---|
 | Candidate relevance | Add the second-stage classifier. | Held-out precision and overall recall, with rejected analytical artifacts reviewed. |
 | Boundary completeness | Include detached captions and notes; handle composites. | Reviewed page boxes and measures of captured context and unrelated surrounding area. |
-| Source linkage | Consider retaining page and box information when scaling beyond the exercise. | A documented output contract and tests linking crops to source pages. |
+| Source linkage | Consider retaining page and box information when scaling beyond the exercise. | A documented output contract and tests linking data snapshots to source pages. |
 | Metadata quality | Compare compatible image models and prompts. | Schema validation plus field-level human review of accuracy, omissions, and unsupported content. |
 | Operations | Add failure reporting, controlled retries, and request accounting. | Output-preservation tests, request limits, and reproducible recovery demonstrations. |
 
 1. Keep the current example and a broader reviewed institutional sample as regression cases.
 2. Test a proposed detector with its required dependency environment, hardware, model licence, and image settings. Compare misses, false positives, fragmented composites, captions, and notes.
-3. Test metadata changes on fixed crops so that detector changes do not confound model comparison. Preserve prompts, presets, and raw responses where permitted.
+3. Test metadata changes on fixed data snapshots so that detector changes do not confound model comparison. Preserve prompts, presets, and raw responses where permitted.
 4. Publish the decision and unresolved failures alongside the candidate results. Adopt only when the agreed gates pass; otherwise retain the tested baseline.
 
-**Worked example.** A future update should explain whether it rejects the Shona photograph and preserves the chart and table captions, then show performance on additional held-out documents. The two illustrated problems define concrete checks without establishing a general benchmark.
+**Worked example.** A future update should explain whether it rejects the cover photograph in the sample PDF and preserves the chart and table captions, then show performance on additional held-out documents. The two illustrated problems define concrete checks without establishing a general benchmark.
 
 **What this does not do.** The roadmap adds no classifier, crop-repair algorithm, retry service, numerical transcription, or publication integration in this contribution.
 
@@ -92,15 +92,15 @@ The separate experimental package provides research annotation and evaluation wo
 
 ## Common mistakes
 
-- Training on the same crops used to report performance overstates improvement.
+- Training on the same data snapshots used to report performance overstates improvement.
 - Reporting classifier precision alone hides lost analytical snapshots.
 - Changing detector and metadata model together obscures the source of a quality change.
 
 ## Verification
 
 - Read the classifier proposal as a development plan. It should identify document-level data splits and assess both precision gain and analytical snapshots incorrectly rejected, with no claim of measured improvement.
-- Check that the proposed evaluation treats relevance, boundary completeness, and metadata correctness separately. A classifier must not be presented as a remedy for regions that were never detected or captions outside the crop.
-- Confirm that the update plan names reviewed evaluation data and acceptance criteria. The Shona cases should illustrate those checks without being described as a sufficient benchmark.
+- Check that the proposed evaluation treats relevance, boundary completeness, and metadata correctness separately. A classifier must not be presented as a remedy for regions that were never detected or captions outside the data snapshot.
+- Confirm that the update plan names reviewed evaluation data and acceptance criteria. The tutorial examples should illustrate those checks without being described as a sufficient benchmark.
 
 ## Checklist
 

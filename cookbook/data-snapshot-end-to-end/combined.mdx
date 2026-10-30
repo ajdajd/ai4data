@@ -15,7 +15,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-The separate stages in chapters 3 to 5 show how to select crops, inspect metadata, and review the results before choosing a wider request scope. The combined command first extracts crops and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
+The separate stages in chapters 3 to 5 show how to select data snapshots, inspect metadata, and review the results before choosing a wider request scope. The combined command first extracts data snapshots and then requests metadata for the newly extracted images. It is convenient once the input, detector, provider, and review process are understood. It is also less selective than the two-image exercise: all newly detected regions are sent to metadata extraction.
 
 The combined example here is supported by the implementation but deliberately unexecuted. Its directory tree illustrates expected naming and stage relationships. The recorded evidence in this guide comes from snapshot-only extraction and the two selected metadata-only requests.
 
@@ -33,7 +33,7 @@ The combined example here is supported by the implementation but deliberately un
 | **AI-native** | An organization integrates both stages with monitored request volume, output checks, and human review. The combined command alone does not provide that wider operational system. |
 
 :::info[Running example]
-The Shona combined invocation uses a fresh `output/shona-combined` root and is not executed for this guide. Its abbreviated tree shows where the already familiar chart and table pairs would appear if extraction and metadata requests succeeded.
+For the sample PDF used in the tutorial, the combined invocation specifies a fresh `output/shona-combined` root and is not executed for this guide. Its abbreviated tree shows where the already familiar chart and table pairs would appear if extraction and metadata requests succeeded.
 :::
 
 ## Recipes
@@ -51,11 +51,11 @@ python -m ai4data.data_snapshot \
   --metadata-provider=openrouter
 ```
 
-1. Confirm that the source can be sent as extracted images to the provider and that the crop volume is acceptable.
+1. Confirm that the source can be sent as extracted images to the provider and that the number of candidate images is acceptable.
 2. Use a new output root and record the configuration. GPU selection changes local detection. The provider operates the metadata service.
-3. After execution, check every saved crop and metadata record. A detector false positive can also incur a metadata request.
+3. After execution, check every saved data snapshot and metadata record. A detector false positive can also incur a metadata request.
 
-**Worked example.** The guide does not execute this command. If a run reproduces the observed eight crops and every metadata request succeeds, the output would have eight PNGs and eight JSONs, including a record for the photograph. This is a conditional expectation; only the selected two-image requests were performed.
+**Worked example.** The guide does not execute this command. If a run reproduces the observed eight candidate images and every metadata request succeeds, the output would have eight PNGs and eight JSONs, including a record for the photograph. This is a conditional expectation; only the selected two-image requests were performed.
 
 **What this does not do.** The combined command does not roll back an entire run after failure. Extraction errors can prevent metadata processing; metadata errors stop at the failing image while earlier files remain.
 
@@ -63,9 +63,9 @@ python -m ai4data.data_snapshot \
 
 <Recipe title="6.2 Read the expected directory layout" level="AI-ready" skills="Developer and data curator" time="Ten minutes to interpret the expected file layout">
 
-**Result:** The relationship between crop and metadata filenames is explicit.
+**Result:** The relationship between data snapshot and metadata filenames is explicit.
 
-The expected structure below is abbreviated to the two target artifacts. Other detections would also appear. The observed crop filenames are used, but the complete combined result has not been generated.
+The expected structure below is abbreviated to the two target artifacts. Other detections would also appear. The observed data snapshot filenames are used, but the complete combined result has not been generated.
 
 ```text
 output/shona-combined/doclayoutyolo/
@@ -81,7 +81,7 @@ output/shona-combined/doclayoutyolo/
 2. Inspect missing JSON as a possible incomplete metadata stage. The PNG may still be valid.
 3. Page coordinates and provider usage logs are not written in this tree.
 
-**Worked example.** The actual staged exercise has all eight detector crops in the local run directory but metadata for only the selected chart and table. The downloadable folder contains those selected pairs, the source-page image, and the inspection helper. Neither folder is claimed to be a complete combined run.
+**Worked example.** The actual staged exercise has all eight detector outputs in the local run directory but metadata for only the selected chart and table. The downloadable folder contains those selected pairs, the source-page image, and the inspection helper. Neither folder is claimed to be a complete combined run.
 
 **What this does not do.** A directory tree is a format illustration. It does not establish detection coverage, metadata completeness, or successful execution.
 
@@ -89,7 +89,7 @@ output/shona-combined/doclayoutyolo/
 
 ## Implementation options
 
-Python callers can use `run_pipeline(input_path, output_dir, model_name="doclayoutyolo", device="cpu", metadata_provider="openrouter")`. It returns new snapshot paths followed by metadata paths. A fully skipped PDF command returns no new paths. Use the separate commands when a curator needs to select crops before incurring metadata costs.
+Python callers can use `run_pipeline(input_path, output_dir, model_name="doclayoutyolo", device="cpu", metadata_provider="openrouter")`. It returns new snapshot paths followed by metadata paths. A fully skipped PDF command returns no new paths. Use the separate commands when a curator needs to select data snapshots before incurring metadata costs.
 
 ## Resources
 
@@ -105,7 +105,7 @@ Python callers can use `run_pipeline(input_path, output_dir, model_name="doclayo
 
 ## Verification
 
-- Compare the proposed command with the staged example. Its destination should be `output/shona-combined`, distinct from `output/cookbook-shona`, so the prior crops would not trigger PDF-level skipping.
+- Compare the proposed command with the staged example. Its destination should be `output/shona-combined`, distinct from `output/cookbook-shona`, so the prior data snapshots would not trigger PDF-level skipping.
 - Read the expected tree by matching complete PNG and JSON stems. It should illustrate the selected pairs while leaving clear that other newly detected regions would also be processed.
 - If the command is run later, inspect its actual files and failures before describing it as successful. The current tree remains an unexecuted illustration.
 

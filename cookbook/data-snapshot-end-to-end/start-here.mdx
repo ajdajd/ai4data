@@ -50,33 +50,33 @@ improvements, so it can be answered without having built a proposed feature.
     {
       id: 'snapshots',
       title: '3. Snapshot extraction',
-      question: 'How are analytical regions located and saved as crops?',
+      question: 'How are analytical regions located and saved as data snapshots?',
       options: [
         'There is no regular way to identify or retain analytical regions from PDFs.',
-        'A curator identifies charts and tables on source pages and saves or inspects crops manually.',
-        'A documented detector run saves candidate PNGs, and selected crops are checked against their source pages before further processing.',
-        'Detection is integrated into document intake, with checks for candidate relevance and crop completeness and human review of uncertain results.',
+        'A curator identifies charts and tables on source pages and saves or inspects data snapshots manually.',
+        'A documented detector run saves candidate PNGs, and selected data snapshots are checked against their source pages before further processing.',
+        'Detection is integrated into document intake, with checks for candidate relevance and data snapshot completeness and human review of uncertain results.',
       ],
     },
     {
       id: 'metadata',
       title: '4. Semantic metadata extraction',
-      question: 'How is the visible analytical content of a crop described?',
+      question: 'How is the visible analytical content of a data snapshot described?',
       options: [
-        'Crops have no consistent description of their variables, units, groups, or visible context.',
-        'A curator writes notes about the visible content and identifies information missing from the crop.',
-        'Selected crops receive schema-constrained model descriptions, and the raw JSON is validated and kept separate from numerical observations.',
+        'Data snapshots have no consistent description of their variables, units, groups, or visible context.',
+        'A curator writes notes about the visible content and identifies information missing from the data snapshot.',
+        'Selected data snapshots receive schema-constrained model descriptions, and the raw JSON is validated and kept separate from numerical observations.',
         'Metadata generation is integrated with validation, ongoing quality checks, and human review before the descriptions are reused.',
       ],
     },
     {
       id: 'review',
-      title: '5. Crop and metadata review',
-      question: 'How are crop quality and metadata interpretations reviewed?',
+      title: '5. Data snapshot and metadata review',
+      question: 'How are data snapshot quality and metadata interpretations reviewed?',
       options: [
         'Detector and metadata outputs are used without comparison with the source.',
-        'A curator opens the crops and metadata beside the PDF and notes missing context or questionable fields.',
-        'Review distinguishes candidate relevance, crop completeness, and metadata correctness, with observations separate from raw outputs.',
+        'A curator opens the data snapshots and metadata beside the PDF and notes missing context or questionable fields.',
+        'Review distinguishes candidate relevance, data snapshot completeness, and metadata correctness, with observations separate from raw outputs.',
         'Model-assisted prioritization and repeated quality checks guide human attention to uncertain outputs, while the original results remain available.',
       ],
     },
@@ -121,7 +121,7 @@ improvements, so it can be answered without having built a proposed feature.
 - A **Not yet** result in [chapter 1](./preparation.mdx) points to the source
   PDF and environment preparation needed before the commands can be followed.
 - The default route through [chapter 2](./models.mdx) through [chapter 4](./metadata.mdx) establishes the
-  configuration, produces candidate crops, and describes the two selected
+  configuration, produces candidate data snapshots, and describes the two selected
   images. Optional model changes can wait until the example is understood.
 - [Chapter 5](./review.mdx) remains relevant even when commands and schema
   validation succeed. Its observations show the difference between a saved
