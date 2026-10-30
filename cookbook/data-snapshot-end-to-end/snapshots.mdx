@@ -15,14 +15,14 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-PDF pages are rendered as red, green, and blue (RGB) images before the detector runs. The detector returns a class, confidence, and normalized rectangle for each retained region. Normalized coordinates describe the left, top, right, and bottom edges as fractions of page width and height, measured from the top-left corner.
+PDF pages are rendered as Python objects before the detector runs. The detector returns a class, confidence, and normalized rectangle (or "bounding boxes") for each retained region. Normalized coordinates describe the left, top, right, and bottom edges as fractions of page width and height, measured from the top-left corner.
 
-The production workflow crops these rectangles directly. It does not pad boxes, merge panels, or persist page coordinates. The semantic JSON generated in the next stage describes image content and serves a different purpose.
+The production workflow crops these rectangles directly and saves each to disk as PNG files. It does not pad boxes, merge panels, or persist page coordinates.
 
 ## Target state
 
 - The snapshot-only command saves inspectable PNG files.
-- The curator can distinguish the target chart and table from irrelevant detections.
+- The curator can distinguish the target data snapshots from irrelevant detections.
 
 ## Maturity levels
 
@@ -40,24 +40,40 @@ The snapshot-only run processes the twelve-page sample PDF used in the tutorial 
 
 <Recipe title="2.1 Run snapshot-only extraction" level="AI-ready" skills="Developer and data curator" time="Ten minutes to prepare the command; detector execution time varies">
 
-**Result:** The document has been processed without a metadata API request.
+**Result:** The document has been processed and snapshot files are present in the output directory.
 
-The following command uses the PDF acquired in [chapter 1](./preparation.mdx) with DocLayout-YOLO on CPU. `--output-dir` is the root; the package appends the detector name and `snapshots/`. The source filename stem is its name without the `.pdf` extension and becomes the prefix of each data snapshot filename. It renders at 300 DPI by default. All twelve pages are processed because the CLI has no page-range option.
+The following command uses the PDF acquired in [chapter 1](./preparation.mdx) with DocLayout-YOLO on CPU. The pipeline renders each page at 300 DPI by default, which is suitable for this purpose. All twelve pages are processed.
 
 ```bash
 python -m ai4data.data_snapshot.extract_data_snapshot \
   --input=data/policy_brief_on_shona_community_from_stateless_to_citizens.pdf \
-  --output-dir=output/cookbook-shona --model=doclayoutyolo --device=cpu
+  --output-dir=output/cookbook-data-snapshot \
+  --device=cpu
 ```
 
-If a compatible NVIDIA GPU and CUDA runtime are available, replace `--device=cpu` with `--device=cuda:0`. The recorded example uses CPU. An unavailable CUDA device causes an error; there is no automatic CPU fallback.
+If a compatible NVIDIA GPU and CUDA runtime are available, `--device=cuda:0` may be used instead of `--device=cpu`. The recorded example uses CPU. An unavailable CUDA device causes an error; there is no automatic CPU fallback.
 
 1. Use a fresh destination so that an earlier file does not cause the entire PDF to be skipped.
-2. Run the command and inspect progress and printed paths. An input can also be a directory searched recursively for PDFs.
-3. Keep source filename stems unique across a directory run, including subdirectories; outputs are flattened into one model directory.
-4. Open the saved candidate images before sending any to a metadata provider.
+2. Run the command and inspect progress and printed paths. A directory can also be passed to the `--input` parameter which will search recursively for PDFs.
+3. Keep source filename stems unique across a runs, including subdirectories; outputs are flattened into one model directory.
 
-**Worked example.** The recorded run saved `figure_000.png` through `figure_006.png` and `table_000.png`, each prefixed by the complete PDF stem. `figure_000` is the cover photograph, `figure_001` is the chart on PDF page 4, and `table_000` is the demographic table on that same page. These counts describe saved detector outputs; the photograph demonstrates why human review is still needed.
+**Worked example.** The recorded run saved `figure_000.png` through `figure_006.png` and `table_000.png`, each prefixed by the complete PDF stem. `figure_000` is the cover photograph, `figure_001` is the chart on PDF page 4, and `table_000` is the demographic table on that same page. These counts describe saved detector outputs. The photograph demonstrates why human review is still needed.
+
+Under the tutorial's output directory, these files have the following layout:
+
+```text
+output/cookbook-data-snapshot/
+└── doclayoutyolo/
+    └── snapshots/
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_000.png
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_002.png
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_003.png
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_004.png
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_005.png
+        ├── policy_brief_on_shona_community_from_stateless_to_citizens_figure_006.png
+        └── policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png
+```
 
 **What this does not do.** This command does not generate metadata or persist page coordinates, confidence scores, page images, or a quality report. No OCR stage is performed.
 
@@ -70,17 +86,20 @@ If a compatible NVIDIA GPU and CUDA runtime are available, replace `--device=cpu
 The figure counter and table counter are independent and start at zero. They continue across the document, so the printed Figure 1 can have the filename suffix `figure_001`. The index does not encode a page number or the printed caption.
 
 1. Open the [source page](pathname:///cookbook-files/data-snapshot-end-to-end/shona-page-4.webp), the [figure data snapshot](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png), and the [table data snapshot](pathname:///cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png).
-2. Check the chart's series legend, horizontal period labels, vertical percentage scale, and both population-group panels.
-3. Check that the table retains its five demographic rows and both year columns. Compare the image with the page to identify excluded captions or source notes.
-4. Record quality observations separately and preserve the produced data snapshot.
-
-**Worked example.** Both selected data snapshots retain their main analytical content but exclude their printed captions and source notes. This is a useful limitation: a later metadata model receives only that image and cannot be expected to recover those excluded details.
 
 [![PDF page 4 containing the chart and demographic table](/cookbook-files/data-snapshot-end-to-end/shona-page-4.webp)](/cookbook-files/data-snapshot-end-to-end/shona-page-4.webp)
 
+2. Check the chart's series legend, horizontal period labels, vertical percentage scale, and both population-group panels.
+
 [![Actual chart data snapshot with two population panels and an employment-status legend](/cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png)](/cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_figure_001.png)
 
+3. Check that the table retains its five demographic rows and both year columns. Compare the image with the page to identify excluded captions or source notes.
+
 [![Actual demographic table data snapshot with 2019 and 2024 columns](/cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png)](/cookbook-files/data-snapshot-end-to-end/policy_brief_on_shona_community_from_stateless_to_citizens_table_000.png)
+
+4. Record quality observations separately and preserve the produced data snapshot.
+
+**Worked example.** Both selected data snapshots retain their main analytical content but exclude their printed captions and source notes. This is a limitation: the later metadata extraction stage receives only that image and cannot be expected to recover those excluded details.
 
 **What this does not do.** A visual comparison of two selected data snapshots is not a document-level precision or recall evaluation.
 
@@ -90,23 +109,26 @@ The two selected PNG data snapshots now provide the image inputs for [chapter 3]
 
 ## Implementation options
 
-Use `--dpi` to choose a positive rendering resolution and a new output root to compare settings safely. Higher resolution consumes more rendering memory and storage; inference also uses the adapter's own image-size setting. The lower-level `extract_snapshots` API accepts a custom detector, while `run_extraction` provides the model-scoped directory convention.
+- Pass a directory to `--input`, such as `--input=data/`, to search recursively for PDFs. Source filename stems must remain unique across subdirectories.
+- Use `--device=cpu` for CPU inference or `--device=cuda:0` when a compatible NVIDIA GPU and CUDA runtime are available.
+- Add `--force` to replace existing outputs for the input PDFs. It deletes matching data snapshots (and metadata, if any) before extraction. A failed run does not restore those files. Use a new output directory to preserve earlier results. [Chapter 6](./operation.mdx) explains recovery and rerun behavior.
+- Use `--dpi` to pass a different rendering resolution (default: 300). Higher resolution consumes more rendering memory and storage.
 
 ## Resources
 
 - The [production README](https://github.com/worldbank/ai4data/blob/main/src/ai4data/data_snapshot/README.md) documents installation, supported commands, and Python interfaces.
 - The [schema reference](/docs/data-snapshots/metadata-schema/) explains the metadata fields and validation boundaries.
-- The [benchmark paper](https://arxiv.org/html/2606.06242v1) defines analytical snapshots and reports detection and spatial evaluation.
+- The [benchmark paper](https://arxiv.org/html/2606.06242v1) introduces data snapshots and reports detection and spatial accuracy metrics of the included models.
 
 ## Common mistakes
 
 - Reading the filename index as a printed figure number points to the wrong artifact.
-- Counting every figure-labelled candidate image as analytical content hides false positives.
-- Assuming captions are automatically included can make metadata incomplete.
+- Counting every figure-labelled candidate image as analytical content.
+- Missed context can make the data snapshot incomplete.
 
 ## Verification
 
-- Inspect the printed paths and the `output/cookbook-shona/doclayoutyolo/snapshots/` directory. The recorded example contains seven figure-labelled PNGs and one table-labelled PNG; investigate differences before relying on the example filenames.
+- Inspect the printed paths and the `output/cookbook-data-snapshot/doclayoutyolo/snapshots/` directory. The recorded example contains seven figure-labelled PNGs and one table-labelled PNG; investigate differences before relying on the example filenames.
 - Open `figure_001` and `table_000` beside PDF page 4. The selected chart should retain its panels and legend, and the table should retain its five rows and both year columns.
 - Check the page beyond each data snapshot boundary. The recorded data snapshots omit their printed captions and source notes, while the cover photograph is an irrelevant analytical candidate.
 

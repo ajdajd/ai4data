@@ -55,7 +55,7 @@ The correct recovery command depends on which files already exist. A fresh outpu
 3. Use a new destination when comparing settings. If replacement is intended, preserve any needed previous results before `--force`.
 4. Expect forced deletion to occur before model loading or replacement succeeds. Failure does not restore the old files.
 
-**Worked example.** After the snapshot-only run for the sample PDF, invoking the combined command with `output/cookbook-shona` would skip the PDF. The two metadata-only commands in [chapter 3](./metadata.mdx) are the appropriate way to enrich selected images. The remaining candidate images intentionally have no metadata.
+**Worked example.** After the snapshot-only run for the sample PDF, invoking the combined command with `output/cookbook-data-snapshot` would skip the PDF. The two metadata-only commands in [chapter 3](./metadata.mdx) are the appropriate way to enrich selected images. The remaining candidate images intentionally have no metadata.
 
 **What this does not do.** The package does not automatically resume missing pages, retry failed requests, or maintain a job ledger. An empty-detection PDF has no completion marker and can be processed again.
 
