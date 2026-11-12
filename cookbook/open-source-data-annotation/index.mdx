@@ -1,0 +1,152 @@
+---
+id: index
+title: Practical Guide to Open-Source Data Annotation Tools
+sidebar_label: Overview
+sidebar_position: 0
+description: This cookbook helps data practitioners and statistical data curators label document regions, dataset mentions, and occupation responses with open-source tools and inspect native exports.
+---
+
+# Practical Guide to Open-Source Data Annotation Tools
+
+**A cookbook for data practitioners and statistical data curators.** Version 0.1 (working draft), November 2026.
+
+:::note[Working draft]
+This guide is a working draft from the AI for Data – Data for AI program.
+It provides practical examples and does not represent official World Bank
+Group guidance or policy. Its [contributing page](./contributing.md) explains
+how to propose corrections. The cookbook remains hidden during editorial
+review. Hidden production builds omit downloadable assets; a local development
+preview or repository checkout is needed to review the complete workflows.
+:::
+
+Data annotation makes a person's interpretation explicit as a label attached
+to a record or a selected region. The result may support data curation,
+statistical processing, model development, evaluation, or other applications.
+The immediate task is to prepare appropriate inputs, apply consistent labels,
+and obtain outputs whose meaning can be checked.
+
+This guide covers three tasks: figure/table bounding boxes with Label Studio,
+dataset-mention spans with doccano, and occupation-response categories with
+doccano. Each chapter contains its own setup, annotation, and export path.
+Readers can start with whichever chapter matches their task. No chapter is
+a prerequisite for another, and none requires model inference.
+
+The examples use native tool formats, JSON/JSONL, and a small subset of
+ISCO-08 for occupation coding. The [standards page](./standards.md)
+distinguishes formal standards from application-specific representations.
+Written labeling rules accompany each task so that syntactically valid
+exports can also be reviewed for their intended meaning.
+
+## Prerequisites
+
+- A data practitioner or statistical data curator can use a browser and run the chapter's shell commands with Python 3.10 in an isolated environment.
+- The machine can install the selected annotation tool, retain its local database, and store the example files and rendered images.
+- An annotator understands the task's inclusion rules; a coding supervisor can resolve occupation responses that lack enough detail.
+- Software reuse at the AI-ready level requires checking source identifiers, labels, and coordinate or character units. AI-native extensions require additional provenance and verification and are outside this pass.
+
+The commands assume a local exercise on Linux or a compatible shell such as
+WSL. Each chapter links official platform alternatives. Local services and
+state should be kept separate from other projects. Installation and browser
+verification limits are recorded in
+[verification.md](pathname:///cookbook-files/open-source-data-annotation/verification.md).
+
+## First steps
+
+1. Select the matching task in the chapter table. Allow about five minutes
+   to inspect that chapter's input and labeling rules.
+2. Complete its first recipe to install the tool and prepare the project.
+   Allow thirty minutes plus dependency download time.
+3. Complete its manual labeling recipe, then export and inspect the output.
+   Allow about thirty-five minutes for the small example.
+
+After a successful export, the related resources explain downstream use.
+Optional model-assisted annotation is reserved for a later pass.
+
+## Chapters and questions
+
+| Chapter | Question | Practical topics |
+|---|---|---|
+| [1. Bounding-box annotation](./bounding-boxes.mdx) | How can figures and tables in PDF documents become reviewed spatial annotations? | Multipage PDF tasks, Figure/Table rules, native JSON, coordinate units, and adapter concepts |
+| [2. Named entity annotation](./dataset-mentions.mdx) | How can dataset mentions in research text become reviewed entity spans? | Independent doccano setup, DATASET spans, unchanged text, native JSONL, and Unicode checks |
+| [3. Text classification and statistical coding](./response-classification.mdx) | How can open-ended occupation responses become consistent reviewed categories? | Independent doccano setup, single-label coding, ISCO subset, review cases, and native JSONL |
+
+## Maturity levels
+
+The shared vocabulary describes organizational practice. A short tutorial
+demonstrates a technique without establishing the maturity of an organization.
+
+| Level | Meaning |
+|---|---|
+| **Foundational** | The practice exists in a form a person can use and a crawler can read. |
+| **AI-ready** | The practice is structured, identified, and accessible through documented interfaces, so that software, including AI systems, can use it without manual steps. |
+| **AI-native** | The practice offers AI-oriented interfaces or methods, with provenance and verification built in. |
+
+## Running example
+
+The National Statistics Office (example) produces a fictional Labour Force
+Survey and a labour market report. This guide uses report `EX-REP-2025-02`
+and survey round `EX-LFS-2025-Q2`, already identified in the shared
+[example facts](pathname:///cookbook-files/_example/facts.json).
+
+The original two-page PDF contains a chart and table of the example's
+unemployment rates, 6.3% for 2025-Q1 and 6.1% for 2025-Q2. The latter is
+provisional. Seven fictional research-style passages refer to example
+datasets, and six fictional occupation responses illustrate coding decisions.
+The six responses do not generate the national indicators and are not a
+statistically meaningful sample. The files are related teaching materials,
+not a claim that one annotation task produces another task's inputs.
+
+The PDF is supplied ready to use. Its build script reads the shared facts
+when rebuilding the file; the annotation workflow does not require rebuilding.
+The [source notes](pathname:///cookbook-files/open-source-data-annotation/sources.md)
+describe provenance, licensing, and the distinction between captured service
+exports and actual human browser review.
+
+## Scope of the examples
+
+The examples are small on purpose. Each recipe names its limits and includes
+an inspectable input, action, and intended or observed output. A structurally
+valid export does not prove semantic correctness or reviewer agreement.
+Pass 1 covers manual workflows only. It includes no model inference,
+training, custom completion system, or downstream evaluation converter.
+
+## Files
+
+| File | Used in |
+|---|---|
+| [EX-REP-2025-02.pdf](pathname:///cookbook-files/open-source-data-annotation/EX-REP-2025-02.pdf) | Chapter 1 uses the original two-page fictional report. |
+| [create_pdf_project.py](pathname:///cookbook-files/open-source-data-annotation/create_pdf_project.py) | Chapter 1 renders a PDF directory and creates multipage tasks through the API. |
+| [multipage-labels.xml](pathname:///cookbook-files/open-source-data-annotation/multipage-labels.xml) | Chapter 1 configures Figure and Table rectangles. |
+| [build_example.py](pathname:///cookbook-files/open-source-data-annotation/build_example.py) | Chapter 1's input can be rebuilt from the shared example facts. |
+| [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl) | Chapter 2 imports seven unchanged passages with source identifiers. |
+| [responses.jsonl](pathname:///cookbook-files/open-source-data-annotation/responses.jsonl) | Chapter 3 imports six unlabeled occupation responses. |
+| [occupation-codebook.csv](pathname:///cookbook-files/open-source-data-annotation/occupation-codebook.csv) | Chapter 3 defines four ISCO categories and one review status. |
+| [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt) | Chapters 2 and 3 install the same isolated doccano environment independently. |
+| [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py) | Chapters 2 and 3 inspect native exports against unchanged source inputs. |
+| [labelstudio-export.json](pathname:///cookbook-files/open-source-data-annotation/labelstudio-export.json) | Chapter 1 has a captured service export for representation inspection. |
+| [entities-export.jsonl](pathname:///cookbook-files/open-source-data-annotation/entities-export.jsonl) | Chapter 2 has a captured service export for offset inspection. |
+| [codes-export.jsonl](pathname:///cookbook-files/open-source-data-annotation/codes-export.jsonl) | Chapter 3 has a captured service export for label inspection. |
+| [sources.md](pathname:///cookbook-files/open-source-data-annotation/sources.md) | All chapters use these source, license, and provenance notes. |
+| [LICENSE.txt](pathname:///cookbook-files/open-source-data-annotation/LICENSE.txt) | All chapters retain the repository license and World Bank IGO rider. |
+| [verification.md](pathname:///cookbook-files/open-source-data-annotation/verification.md) | All chapters distinguish executed checks from remaining manual verification. |
+| [manual-testing.md](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md) | All chapters have an exact browser test sequence and Pass 2 extension points. |
+
+## Related resources
+
+| Resource | Purpose |
+|---|---|
+| [Data Snapshot review](/cookbook/data-snapshot-end-to-end/review) | This chapter reviews detected snapshot and metadata quality after extraction. |
+| [Monitoring of Data Use](/cookbook/monitoring-data-use/detect) | This chapter connects reviewed mentions to extraction and analysis. |
+| [Statistical coding](/cookbook/language-models-in-production/coding) | This chapter describes automated coding using human reference labels. |
+| [Publishing ML-ready datasets](/cookbook/ml-ready-datasets/) | This cookbook covers later dataset packaging and publication. |
+| [Evaluation suites](/cookbook/evaluation-suites/) | This cookbook covers later evaluation design and measurement. |
+
+## Citation
+
+World Bank. 2026. *Practical Guide to Open-Source Data Annotation Tools.*
+Version 0.1. AI for Data – Data for AI.
+https://worldbank.github.io/ai4data/cookbook/open-source-data-annotation/
+
+## Version history
+
+- **0.1 (November 2026).** The first draft covers three independent manual workflows and native exports. Model-assisted extensions remain outside Pass 1.

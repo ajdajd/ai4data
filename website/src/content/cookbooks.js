@@ -5,6 +5,17 @@ import {isHiddenCookbook, isHiddenPath, isIndexedCookbook} from './visibility';
 // website/cookbook-visibility.json are dropped from every list exported here.
 export const allCookbooks = [
   {
+    id: 'open-source-data-annotation',
+    version: '0.1',
+    date: 'November 2026',
+    audience: 'Data practitioners and statistical data curators',
+    title: 'Practical Guide to Open-Source Data Annotation Tools',
+    description:
+      'Three independent chapters cover multipage PDF bounding boxes with Label Studio, dataset-mention spans with doccano, and occupation-response coding with doccano, using fictional examples and native annotation exports.',
+    chapters: 3,
+    to: '/cookbook/open-source-data-annotation/',
+  },
+  {
     id: 'data-snapshot-end-to-end',
     version: '0.1',
     date: 'October 2026',

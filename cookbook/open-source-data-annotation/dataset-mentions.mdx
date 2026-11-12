@@ -1,0 +1,293 @@
+---
+id: dataset-mentions
+title: "2. Named entity annotation"
+sidebar_label: "2. Dataset mentions"
+sidebar_position: 2
+description: This chapter sets up doccano independently, marks dataset mentions in unchanged research passages, and verifies native JSONL spans and source identifiers.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 2. Named entity annotation
+
+**Question:** How can dataset mentions in research text become reviewed entity spans?
+
+## Rationale
+
+A dataset can be mentioned by its full name, an acronym, or a description.
+Named entity annotation marks the exact part of a passage that refers to the
+data source. A span is a continuous selection of characters, with a start
+position, an end position, and a label that describes the selection.
+
+Doccano provides a sequence-labeling project for this task. It keeps the
+passage and the selected character positions together in its native export.
+These reviewed examples can support data curation, extraction-system
+development, or quality assurance. This chapter teaches annotation and export;
+it does not require a model or the other chapters.
+
+## Target state
+
+- Every imported passage retains a stable source identifier and unchanged text.
+- Dataset mentions follow a written inclusion policy and have been reviewed.
+- The native JSONL export reconstructs the intended text from every span.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A person marks dataset mentions and inspects the exported selected text. |
+| **AI-ready** | Stable identifiers and validated offsets make the labels reusable by software. |
+| **AI-native** | A model could propose spans for human correction with provenance retained. This extension is reserved for Pass 2. |
+
+:::info[Running example]
+The fictional National Statistics Office prepares seven research-style
+passages in the context of its labour market report, `EX-REP-2025-02`.
+The passages mention the Labour Force Survey and related example datasets.
+One contains no dataset mention, and two exercise Unicode text handling.
+:::
+
+## Recipes
+
+<Recipe title="2.1 Set up a dataset-mention project" level="Foundational" skills="Data practitioner comfortable with a terminal and a browser" time="Thirty minutes, plus dependency download time">
+
+**Result:** Doccano contains a sequence-labeling project with seven unchanged passages and one DATASET label.
+
+Doccano runs a web application and a task worker. The worker handles imports
+and exports, so a working login page alone does not establish a complete
+installation. An isolated environment keeps the application's older
+dependencies separate from other Python projects.
+
+The example uses doccano 1.8.4 with Python 3.10. The downloadable requirements
+include compatibility bounds for dependencies that have changed since that
+release. The [verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
+states what was executed. The commands use a Linux or macOS shell;
+the [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/)
+covers other supported setups.
+
+1. Download [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl),
+   [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt),
+   and [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
+   into a working directory. JSONL stores one JSON object per line. The file
+   is UTF-8 text, and each record contains the fields below.
+
+| Field | Meaning |
+|---|---|
+| `source_id` | This stable identifier distinguishes a passage, even when passages repeat a dataset name. |
+| `document_id` | This field connects the passage to the fictional report. |
+| `text` | This exact text is displayed and labeled. |
+| `label` | The empty list supplies the native annotation field without revealing any answers. |
+
+The input passages contain no reference labels to reveal during annotation.
+
+```json file=../../website/static/cookbook-files/open-source-data-annotation/passages.jsonl
+```
+
+2. Create the environment and initialize a new local database. Choose a local
+   account password when prompted. Run initialization once for a new state
+   directory, and keep that directory when restarting the tool.
+
+The following commands start the web application. The `DOCCANO_HOME` setting
+keeps its state in the working directory.
+
+```shell
+python3.10 -m venv .venv-doccano
+source .venv-doccano/bin/activate
+python -m pip install -r requirements-doccano.txt
+export DOCCANO_HOME="$PWD/doccano-entities-state"
+doccano init
+read -rsp "Local annotator password: " DOCCANO_PASSWORD
+doccano createuser --username annotator --password "$DOCCANO_PASSWORD"
+unset DOCCANO_PASSWORD
+doccano webserver --port 8000 --workers 1
+```
+
+3. In a second terminal in the same directory, activate the environment,
+   select the same state directory, and start the worker. Leave both
+   terminals running while importing and exporting.
+
+```shell
+source .venv-doccano/bin/activate
+export DOCCANO_HOME="$PWD/doccano-entities-state"
+doccano task --concurrency 1
+```
+
+4. Open `http://127.0.0.1:8000` and sign in. Create a **Sequence Labeling**
+   project named `Labour report dataset mentions`. Disable overlapping
+   entities, grapheme mode, and relation annotation for this exercise. Grapheme
+   mode groups displayed characters differently from the code-point offsets
+   used by the validator. In **Labels**, add
+   the exact label `DATASET`.
+5. In **Dataset**, use **Actions → Import Dataset** and select JSONL. Set the
+   text column to `text` and the label column to `label`. The unlabeled input
+   supplies `label: []` for each record. Confirm that seven records import without errors and that
+   `source_id` is retained as record metadata. Do not substitute the tool's
+   internal numeric record ID for this source identifier.
+
+**Worked example.** Record `p01` contains “We used the Labour Force Survey to
+describe employment.” Record `p05` discusses methods without identifying a
+dataset. Both belong in the project, because a reviewed negative example is
+different from a passage that was never inspected.
+
+**What this does not do.** This local setup does not configure a shared
+production service, OCR, or PDF text extraction. The passages are prepared
+inputs. The application must not transform them after span positions are set.
+
+</Recipe>
+
+<Recipe title="2.2 Review exact dataset spans" level="Foundational" skills="Data curator or research annotator" time="Twenty minutes">
+
+**Result:** Each passage has reviewed entity labels or an explicit review decision that no dataset is mentioned.
+
+The introductory `DATASET` label means a named data source, its explicit
+acronym, or an identifiable dataset description. Mark only the referring
+words. Exclude surrounding punctuation, grammatical context, and unrelated
+report titles. Generic mentions such as “survey methods” do not identify a
+dataset in this exercise.
+
+This policy is a teaching simplification. The current AI4Data extraction
+implementation distinguishes named, descriptive, and vague data references.
+Those categories do not mean that every model-detected phrase should be
+accepted as a valid annotation under this policy.
+
+1. Open the annotation screen and select `Labour Force Survey` in `p01`.
+   Apply `DATASET`, excluding the preceding “the” and the following context.
+2. In `p02`, label the full survey name and both occurrences of `LFS`
+   separately. An acronym inside parentheses is its own span; the parentheses
+   themselves stay outside the selection.
+3. Label `Household Budget Survey 2021` in `p03` and `Population and Housing
+   Census 2014` in `p04`. Leave `p05` without an entity. Use the tool's
+   completion/confirmation action after inspecting each passage, including
+   that negative example.
+4. Practice correction by selecting an overlong span, deleting its label,
+   and selecting the intended words again. Label the survey mentions in
+   `p06` and `p07` without editing the passages. Reopen the records and
+   confirm that the corrected selections remain saved.
+
+**Worked example.** The intended selection in `p01` is `Labour Force Survey`.
+It begins at character position 12 and ends just before position 31.
+The planned reference interpretation has eight mentions across seven
+passages. That count expresses the stated labeling policy; a structural
+validator cannot establish that the semantic decisions are correct.
+
+**What this does not do.** This exercise does not resolve every descriptive
+or vague reference in research literature. Difficult cases need a documented
+annotation decision and possibly a second reviewer. Repeated names at
+different positions remain separate mentions.
+
+</Recipe>
+
+<Recipe title="2.3 Export and verify native entity spans" level="AI-ready" skills="Data curator; basic Python use" time="Fifteen minutes">
+
+**Result:** A native doccano JSONL export preserves the original passages and reconstructs every selected mention.
+
+An offset is a character position in the text that was imported. The start
+position is included and the end position is excluded. Thus `text[12:31]`
+selects the nineteen characters of `Labour Force Survey` in `p01`.
+These positions are not UTF-8 byte counts.
+
+Changing whitespace, line endings, accents, or Unicode normalization can
+move offsets. The validator compares every exported passage with its source
+before using Python Unicode code-point positions to display spans. The
+Unicode round-trip checks in the manual checklist remain necessary for the
+selected application's browser interface.
+
+1. Use **Actions → Export Dataset**, choose ordinary sequence-labeling
+   **JSONL**, and include the complete reviewed set. Extract the download
+   archive if necessary. Save the annotator's JSONL as `entities-export.jsonl`.
+   Keep the native file, including its metadata.
+2. Inspect `source_id`, `text`, and the singular `label` field. An entity
+   entry has the native form `[start, end, "DATASET"]`; the reviewed negative
+   has an empty list. Some older documentation uses `labels`, so confirm the
+   installed release before interpreting these fields.
+3. Run the check below from the directory containing the original passages,
+   export, and downloaded script. Review the displayed text against the
+   annotation policy. Confirm the selections in `p06` and `p07` particularly
+   carefully because an emoji and a combining accent precede a mention.
+
+The command reads both files without modifying them. It rejects changed text,
+missing or duplicate source identifiers, invalid offsets, unknown labels, and
+overlapping spans. It displays the selected words so that a human can check
+their meaning.
+
+```bash
+python inspect_doccano.py entities entities-export.jsonl --source passages.jsonl
+```
+
+The captured [native service fixture](pathname:///cookbook-files/open-source-data-annotation/entities-export.jsonl)
+produces the following output. Its labels
+were entered through the API, so this check demonstrates persistence and
+representation. Human browser review remains a separate check.
+
+```text
+p01 [12:31] 'Labour Force Survey'
+p02 [4:23] 'Labour Force Survey'
+p02 [25:28] 'LFS'
+p02 [55:58] 'LFS'
+p03 [4:32] 'Household Budget Survey 2021'
+p04 [4:38] 'Population and Housing Census 2014'
+p06 [16:35] 'Labour Force Survey'
+p07 [15:34] 'Labour Force Survey'
+PASS: 7 unchanged record(s); 8 span(s).
+```
+
+The focused validator uses only the Python standard library and retains the
+tool's native representation.
+
+```python file=../../website/static/cookbook-files/open-source-data-annotation/inspect_doccano.py
+```
+
+**Worked example.** A native label triple `[12, 31, "DATASET"]` for `p01`
+reconstructs `Labour Force Survey`. A complete export should contain the same
+seven source identifiers, including `p05` with no entity labels. The
+[verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
+separates executed service checks from browser actions still requiring review.
+
+**What this does not do.** Valid offsets can still select the wrong words.
+An empty label list does not prove that a person reviewed the record. The
+validator does not normalize text, align changed versions, or measure model
+quality. Relation-enabled exports are outside this introductory format.
+
+</Recipe>
+
+## Implementation options
+
+- Native JSONL preserves text and character offsets without an intermediary annotation schema.
+- The official container setup is an alternative to the isolated Python installation.
+- Optional GLiNER2 preannotation belongs after successful manual export and verification; it is not implemented in this pass.
+
+## World Bank examples
+
+- [Monitoring of Data Use](/docs/data_use/) documents dataset-mention extraction and the current implementation's richer categories.
+- The [Monitoring of Data Use cookbook](/cookbook/monitoring-data-use/detect) connects reviewed mentions to extraction and analysis. Its illustrative fields are not the doccano export specification.
+
+## Resources
+
+- The [doccano tutorial](https://doccano.github.io/doccano/tutorial/) explains sequence-labeling projects and interactive selection.
+- The [doccano 1.8.4 export implementation](https://github.com/doccano/doccano/blob/v1.8.4/backend/data_export/pipeline/factories.py) defines the release-specific native field mapping.
+- The [2025 research paper](https://arxiv.org/abs/2502.10263) provides context on dataset-mention monitoring with language models and reviewed examples.
+- The [May 2026 research paper](https://arxiv.org/abs/2605.30582) describes multitask extraction and a separate research annotation interface.
+- The [September 2026 research paper](https://arxiv.org/abs/2609.12107) describes domain adaptation using refined candidate mentions. These papers do not demonstrate the doccano procedure in this chapter.
+
+## Common mistakes
+
+- Editing imported text after annotation changes the reference for its character positions.
+- Treating generic data nouns as named datasets changes the agreed inclusion policy.
+- Deduplicating repeated names removes separate mention positions that the annotation task needs.
+- Replacing source identifiers with internal project IDs breaks the connection to the original passages.
+
+## Verification
+
+- Confirm that all seven source records survive import and export with unchanged text.
+- Read the reconstructed spans and compare them with the labeling rules.
+- Check a reviewed negative separately from an unfinished record in the UI.
+- Complete the [Unicode and browser checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md) before treating arbitrary Unicode offset behavior as verified.
+
+## Checklist
+
+<Checklist id="open-source-data-annotation-entities" items={[
+  'The web application and import/export worker use the same local state.',
+  'The project uses the DATASET label and the stated inclusion policy.',
+  'Corrections and negative passages have been reviewed and saved.',
+  'Native JSONL preserves source identifiers, unchanged text, and valid spans.'
+]} />

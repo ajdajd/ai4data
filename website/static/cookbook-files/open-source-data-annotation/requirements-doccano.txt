@@ -1,0 +1,11 @@
+# Install in an isolated Python 3.10 environment.
+doccano==1.8.4
+# environs 9.5 expects marshmallow 3; doccano's parsers use Pydantic 1 APIs.
+marshmallow==3.26.2
+pydantic==1.10.27
+# pandas 1.5 requires the NumPy 1 binary interface.
+numpy==1.26.4
+# django-polymorphic 3 imports pkg_resources, removed by newer setuptools.
+setuptools==80.9.0
+# The newer auto-labeling package requires Pydantic 2 even at application startup.
+auto-labeling-pipeline==0.1.21

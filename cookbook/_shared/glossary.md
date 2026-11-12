@@ -98,6 +98,8 @@ chapters. Edit terms here; never edit the generated pages.
 
 **Crosswalk.** A mapping from one classification to another, for example from a national occupation classification to ISCO.
 
+**Data annotation.** The assignment of reviewed labels to data records or selected regions, such as document bounding boxes, text spans, or survey responses. This qualified term distinguishes data labeling from annotations that describe software tools.
+
 **Data appraisal.** The DDI field for known quality issues of a study: coverage gaps, non-response, comparability limits.
 
 **Data dictionary.** The documentation of a data file's variables: names, labels, types, value codes, missing codes, universes, questions.

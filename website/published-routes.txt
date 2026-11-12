@@ -175,6 +175,13 @@
 /cookbook/monitoring-data-use/report
 /cookbook/monitoring-data-use/standards
 /cookbook/monitoring-data-use/start-here
+/cookbook/open-source-data-annotation
+/cookbook/open-source-data-annotation/bounding-boxes
+/cookbook/open-source-data-annotation/contributing
+/cookbook/open-source-data-annotation/dataset-mentions
+/cookbook/open-source-data-annotation/glossary
+/cookbook/open-source-data-annotation/response-classification
+/cookbook/open-source-data-annotation/standards
 /cookbook/serving-statistics-to-agents
 /cookbook/serving-statistics-to-agents/access
 /cookbook/serving-statistics-to-agents/context

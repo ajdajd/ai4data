@@ -1,0 +1,6 @@
+code,title,teaching_rule
+2341,Primary school teachers,Use when the response explicitly describes teaching primary school pupils.
+8322,"Car, taxi and van drivers",Use when the response explicitly describes driving a taxi car or van.
+5211,Stall and market salespersons,Use when the response explicitly describes selling goods at a market stall.
+7231,Motor vehicle mechanics and repairers,Use when the response explicitly describes repairing motor vehicles including motorcycles.
+NEEDS_REVIEW,Insufficient detail or outside this teaching codebook,Use when no listed occupation is supported without guessing; this is a workflow label rather than an ISCO code.

@@ -1,0 +1,278 @@
+---
+id: response-classification
+title: "3. Text classification and statistical coding"
+sidebar_label: "3. Statistical coding"
+sidebar_position: 3
+description: This chapter installs doccano independently, assigns one occupation category to each fictional survey response, and verifies the native JSONL output.
+---
+
+import Recipe from '@site/src/components/Cookbook/Recipe';
+import Checklist from '@site/src/components/Cookbook/Checklist';
+
+# 3. Text classification and statistical coding
+
+**Question:** How can open-ended occupation responses become consistent reviewed categories?
+
+## Rationale
+
+An occupation response describes work in a respondent's own words. Statistical
+coding assigns a category from an established classification using the work
+described. Text classification applies the category to the whole response;
+it does not mark individual character spans.
+
+Doccano can present each response with a small list of allowed categories.
+A codebook states what those categories mean and how uncertain cases are
+handled. This chapter uses a limited subset of ISCO-08, the International
+Labour Organization's occupation classification, and ends with native JSONL.
+The chapter includes its own installation instructions and needs no other
+chapter or model-assisted coding system.
+
+## Target state
+
+- Each source response has exactly one saved category under the teaching codebook.
+- Responses with insufficient detail or outside the limited codebook remain visible for review.
+- Native exports preserve source identity, unchanged text, and string-valued codes.
+
+## Maturity levels
+
+| Level | Steps |
+|---|---|
+| **Foundational** | A coder assigns categories using written definitions and retains ambiguous responses for review. |
+| **AI-ready** | Stable identifiers and validated labels allow the coded responses to enter a documented statistical workflow. |
+| **AI-native** | Reference labels could support verified automated coding with human oversight. That downstream process is outside this chapter. |
+
+:::info[Running example]
+The fictional National Statistics Office codes six teaching responses in the
+context of `EX-LFS-2025-Q2`, the Labour Force Survey's second-quarter round.
+The responses illustrate coding decisions. They are not a representative
+sample and do not produce the shared example's national unemployment rate.
+:::
+
+## Recipes
+
+<Recipe title="3.1 Set up a single-label coding project" level="Foundational" skills="Statistical coder or data practitioner comfortable with a terminal" time="Thirty minutes, plus dependency download time">
+
+**Result:** Doccano contains six unlabeled responses in a single-label text-classification project.
+
+A single-label project requires one category for a completed response. The
+small codebook contains four ISCO-08 unit groups and a separate workflow
+label for cases that cannot be assigned within this exercise. The input
+records intentionally omit reference codes and model suggestions.
+
+The local installation uses Python 3.10 and doccano 1.8.4 with the supplied
+compatibility requirements. It needs both a web application and an import/export
+worker. These instructions are complete for a reader arriving directly at
+this chapter. A working existing installation can be reused with a new project.
+
+1. Download [responses.jsonl](pathname:///cookbook-files/open-source-data-annotation/responses.jsonl),
+   [occupation-codebook.csv](pathname:///cookbook-files/open-source-data-annotation/occupation-codebook.csv),
+   [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt),
+   and [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
+   into a working directory. Each JSONL line is one response.
+
+| Field | Meaning |
+|---|---|
+| `source_id` | This stable response identifier connects the label back to the source record. |
+| `dataset_id` | This field records the fictional survey round. |
+| `text` | This field contains the unchanged occupation description. |
+| `label` | The empty list is the native field for a response that has no assigned category yet. |
+
+The downloadable input is small enough to inspect before importing it.
+
+```json file=../../website/static/cookbook-files/open-source-data-annotation/responses.jsonl
+```
+
+2. Create an isolated environment and a new local state directory. The
+   commands below use a Linux or macOS shell. The
+   [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/)
+   provides platform alternatives. Initialize a fresh database once and
+   retain it for later sessions.
+
+The following commands create the account and start the web application.
+
+```shell
+python3.10 -m venv .venv-doccano
+source .venv-doccano/bin/activate
+python -m pip install -r requirements-doccano.txt
+export DOCCANO_HOME="$PWD/doccano-codes-state"
+doccano init
+read -rsp "Local annotator password: " DOCCANO_PASSWORD
+doccano createuser --username annotator --password "$DOCCANO_PASSWORD"
+unset DOCCANO_PASSWORD
+doccano webserver --port 8000 --workers 1
+```
+
+3. In another terminal in the same directory, start the worker using the same
+   environment and state. If another local doccano server occupies port
+   8000, stop it or reuse that installation with a separate project.
+
+```shell
+source .venv-doccano/bin/activate
+export DOCCANO_HOME="$PWD/doccano-codes-state"
+doccano task --concurrency 1
+```
+
+4. Open `http://127.0.0.1:8000`, sign in, and create a **Text Classification**
+   project named `Labour survey occupation coding`. Enable **Single label**
+   classification. Add the exact five label values from the `code` column
+   of the codebook, including `NEEDS_REVIEW`.
+5. Import `responses.jsonl` as JSONL with `text` as the data column and
+   `label` as the label column. The empty lists contain no assigned labels. Check that six
+   records appear and their `source_id` metadata is retained.
+
+**Worked example.** The first record, `r01`, says “primary school teacher”.
+The project offers `2341` as one of its allowed labels. The tool's numeric
+record ID may change after reimport; `r01` remains the source identity.
+
+**What this does not do.** The project does not load the full ISCO hierarchy
+or enforce the definitions of every occupation. This local exercise does not
+configure a shared production deployment or a model suggestion service.
+
+</Recipe>
+
+<Recipe title="3.2 Assign occupation codes and review labels" level="Foundational" skills="Statistical coder with the teaching codebook" time="Twenty minutes">
+
+**Result:** Each response has a supported occupation code or a visible NEEDS_REVIEW decision.
+
+ISCO-08 groups occupations by their tasks and duties. An industry, employer,
+or workplace alone is insufficient evidence of a person's occupation. The
+four selected categories have been checked against the official ILO
+structure and definitions. The teaching rules below are short paraphrases;
+they do not replace the full classification manual.
+
+The codebook's `code` column supplies exact label values, `title` identifies
+the category, and `teaching_rule` states the decision used in this example.
+
+```csv file=../../website/static/cookbook-files/open-source-data-annotation/occupation-codebook.csv
+```
+
+1. Read each response and select the code supported by the described work.
+   For example, teaching primary-school pupils supports `2341`, while
+   driving a taxi supports `8322`.
+2. Assign `5211` to the response about selling vegetables at a market and
+   `7231` to the response about repairing motorcycles. The ILO definition
+   includes fresh-food market vendors within `5211` and motorcycle mechanics
+   within `7231`. A prepared-food vendor or a bicycle repairer would need
+   different consideration under the full classification.
+3. Assign `NEEDS_REVIEW` to “works in a shop” and “helps at home”. The first
+   does not establish a listed occupation, and the second does not explain
+   the work or employment context. This label is a workflow status. It is
+   separate from valid ISCO codes and can flag a response outside this limited codebook.
+4. Correct one deliberately mistaken selection by replacing it with the
+   supported label. Confirm completion in the tool and reopen the record
+   to check that only one category remains saved.
+
+**Worked example.** The teaching decisions are `r01 → 2341`, `r02 → 8322`,
+`r03 → 5211`, and `r06 → 7231`. Records `r07` and `r14` remain
+`NEEDS_REVIEW`. The next statistical processing step should retain those
+review cases and exclude the workflow label from occupation counts.
+
+The project treats the selected unit groups as a flat list. ISCO has broader
+parent categories, but doccano does not infer or enforce their hierarchy here.
+Codes remain strings, including any leading zeros in a larger classification.
+
+**What this does not do.** A small codebook cannot cover a national survey.
+Production coding needs the complete applicable classification, fuller
+response context, and procedures for clarification and adjudication.
+
+</Recipe>
+
+<Recipe title="3.3 Export and verify native response labels" level="AI-ready" skills="Statistical coder; basic Python use" time="Fifteen minutes">
+
+**Result:** Native doccano JSONL retains each response identifier and exactly one permitted string label.
+
+The native JSONL representation keeps the response text beside its category
+list. Even in a single-label project, `label` is a list such as `["2341"]`.
+A stable source identifier allows the label to be joined to the source survey
+record without relying on the application's internal IDs or row order.
+
+1. Use **Actions → Export Dataset** and select **JSONL** for the complete
+   reviewed set. Extract the archive if necessary and save the annotator's
+   file as `codes-export.jsonl`.
+2. Inspect `source_id`, `text`, and `label`. Confirm that `2341` is a quoted
+   string and that the two review cases remain visible. Keep the native
+   export unchanged as the annotation record.
+3. Run the command below with the original unlabeled input and codebook.
+   Check the identifiers and category values it prints. The validator reads
+   the CSV codes as strings and checks that each source appears exactly once.
+
+The command rejects changed text, missing or duplicate identifiers, numeric
+codes, unknown categories, and empty or multiple labels.
+
+```bash
+python inspect_doccano.py classification codes-export.jsonl --source responses.jsonl --codebook occupation-codebook.csv
+```
+
+The captured [service fixture](pathname:///cookbook-files/open-source-data-annotation/codes-export.jsonl)
+produces the following result. Those teaching
+categories were entered through the API and exported by doccano; browser
+selection and correction remain separate manual checks.
+
+```text
+r01 2341
+r02 8322
+r03 5211
+r06 7231
+r07 NEEDS_REVIEW
+r14 NEEDS_REVIEW
+PASS: 6 unchanged record(s); 6 code(s).
+```
+
+**Worked example.** A record containing `source_id: "r01"` and
+`label: ["2341"]` can be joined back to response `r01`. The intended complete
+export has six responses, four occupation-code assignments, and two review
+assignments. Compare any recorded execution evidence with
+[verification.md](pathname:///cookbook-files/open-source-data-annotation/verification.md).
+
+Human-coded responses can provide reference labels for quality assurance or
+later automated statistical coding. The
+[Language Models in Production coding chapter](/cookbook/language-models-in-production/coding)
+explains that downstream work. This chapter ends with reviewed labels and
+does not implement automation.
+
+**What this does not do.** A structurally valid category can still be wrong.
+The validator does not measure coder agreement, resolve review cases, or
+certify the sample as a gold-standard dataset. No model assistance is included.
+
+</Recipe>
+
+## Implementation options
+
+- Native JSONL preserves list-valued string labels and source metadata for inspection and later joins.
+- Native CSV is an alternative when its label encoding and string types are checked before reuse.
+- The full ISCO classification belongs in a production coding procedure; the small flat codebook is sufficient for learning the tool.
+
+## World Bank examples
+
+- The [statistical-coding chapter](/cookbook/language-models-in-production/coding) describes automated coding against human reference labels.
+- The [evaluation cookbook](/cookbook/evaluation-suites/extraction) explains downstream classification measurement without changing the annotation procedure here.
+
+## Resources
+
+- The [doccano installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/) explains the application and worker setup.
+- The [native export implementation](https://github.com/doccano/doccano/blob/v1.8.4/backend/data_export/pipeline/factories.py) defines list-valued classification labels.
+- The [ILO ISCO reference](https://ilostat.ilo.org/methods/concepts-and-definitions/classification-occupation/) provides the official classification and linked group definitions.
+- The [source and license notes](pathname:///cookbook-files/open-source-data-annotation/sources.md) identify the fictional response texts and the official codebook references.
+
+## Common mistakes
+
+- A workplace description is treated as evidence of a specific occupation without enough detail about the work.
+- Multiple categories remain selected because the project was configured as multilabel.
+- A workflow review label is counted as a valid ISCO occupation code.
+- Converting codes to numbers can remove leading zeros when the codebook grows.
+
+## Verification
+
+- Confirm that the project is configured for one category per completed response.
+- Check all six source identifiers and unchanged responses in the native export.
+- Compare category assignments with the codebook and retain both review cases.
+- Complete the [manual testing checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md), including a saved correction and reopening the record.
+
+## Checklist
+
+<Checklist id="open-source-data-annotation-codes" items={[
+  'The independent doccano setup and worker are running.',
+  'The project uses one label and the stated teaching codebook.',
+  'Insufficient-detail responses remain visible as review cases.',
+  'The native export preserves source identity and permitted string codes.'
+]} />

@@ -1,0 +1,7 @@
+<View>
+  <Image name="pdf" valueList="$pages" zoom="true" zoomControl="true" />
+  <RectangleLabels name="rectangles" toName="pdf" canRotate="false">
+    <Label value="Figure" background="#b83d72" />
+    <Label value="Table" background="#2863ad" />
+  </RectangleLabels>
+</View>
