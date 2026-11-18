@@ -1,7 +1,7 @@
 """Create a multipage Label Studio project from a directory of PDFs.
 
-Usage: python create_pdf_project.py --input-dir pdf-input --data-root ls-media
-       --batch lfs-q2 --title "Labour market report"
+Usage: python create_pdf_project.py --input-dir input --data-root ls-media
+       --batch shona --title "Shona policy brief"
 
 Dependencies beyond the shared cookbook requirements: PyMuPDF and requests.
 Set LABEL_STUDIO_API_KEY to a legacy token. The server must serve data-root

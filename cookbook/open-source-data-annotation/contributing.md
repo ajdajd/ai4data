@@ -45,7 +45,6 @@ and evidence for this procedure.
 ## Verification evidence
 
 Describe the service and browser checks performed for a contribution.
-The manual checklist describes browser steps for reviewing the workflows.
 A screenshot must come from the stated application and example;
 an expected export must not be presented as an observed export.
 
@@ -58,11 +57,3 @@ the existing generator; do not edit this cookbook's generated glossary by hand.
 The generator selects terms by substring matching without disambiguating their
 senses, so unrelated entries and other meanings can also appear. This known
 limitation remains; the generator and existing definitions are unchanged.
-
-## Pass 2 scope
-
-DocLayout-YOLO suggestions can extend the completed multipage project recipe.
-GLiNER2 suggestions can extend the completed entity export recipe. Both
-extensions must preserve the manual path, identify model provenance, and
-demonstrate correction before a reviewed export. Neither is implemented in
-this pass; model-assisted classification is outside the planned extension.

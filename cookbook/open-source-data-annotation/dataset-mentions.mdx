@@ -290,7 +290,7 @@ quality. Relation-enabled exports are outside this introductory format.
 - Confirm that all 14 source records survive import and export with unchanged text.
 - Read the reconstructed spans and compare them with the labeling rules.
 - Check a reviewed negative separately from an unfinished record in the UI.
-- Complete the [Unicode and browser checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md) before treating arbitrary Unicode offset behavior as verified.
+- For the Unicode examples, reopen the saved records and compare the browser highlights with `text[start:end]` in the export.
 
 The additional Unicode checks concern how software counts characters. The
 validator uses Python Unicode code points, with an exclusive end position.

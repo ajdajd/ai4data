@@ -6,8 +6,8 @@ Usage: python inspect_doccano.py entities exported.jsonl --source passages.jsonl
 
 Only the Python standard library is required. Exit status is 0 when the
 structural checks pass and 1 otherwise. Files are read without modification.
-Offsets use Python Unicode code points, with an exclusive end. The selected
-doccano installation must pass the Unicode round-trip checks in manual-testing.md.
+Offsets use Python Unicode code points, with an exclusive end. Compare exported
+text slices with saved browser selections to check Unicode offset behavior.
 
 What this does not check: whether a human selected the correct entity or
 occupation, whether a record was reviewed in the UI, or coding agreement.
