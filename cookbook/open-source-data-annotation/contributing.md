@@ -44,9 +44,9 @@ and evidence for this procedure.
 
 ## Verification evidence
 
-The downloadable verification record describes executed service checks.
-The manual checklist records browser steps still needed for editorial
-review. A screenshot must come from the stated application and example;
+Describe the service and browser checks performed for a contribution.
+The manual checklist describes browser steps for reviewing the workflows.
+A screenshot must come from the stated application and example;
 an expected export must not be presented as an observed export.
 
 ## Glossary scope

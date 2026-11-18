@@ -63,8 +63,7 @@ dependencies separate from other Python projects.
 The example uses doccano 1.8.4 with Python 3.10. The downloadable requirements
 include compatibility bounds for dependencies that have changed since that
 release. The commands use uv to apply those bounds as explicit dependency
-overrides. The [verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
-states what was executed. The commands use a Linux or macOS shell;
+overrides. The commands use a Linux or macOS shell;
 the [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/)
 covers other supported setups.
 
@@ -251,9 +250,7 @@ tool's native representation.
 
 **Worked example.** A native label triple `[11, 39, "DATASET"]` for `m01`
 reconstructs `Household Budget Survey 2021`. A complete export should contain
-the same 14 source identifiers, including `m13` and `m14` with no entity labels. The
-[verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
-separates executed service checks from browser actions still requiring review.
+the same 14 source identifiers, including `m13` and `m14` with no entity labels.
 
 **What this does not do.** Valid offsets can still select the wrong words.
 An empty label list does not prove that a person reviewed the record. The
