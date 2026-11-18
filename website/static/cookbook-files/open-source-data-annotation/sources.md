@@ -1,8 +1,8 @@
 # Example sources and licensing
 
-The report, research-style passages, and occupation responses are fictional
-teaching materials for the National Statistics Office (example). They contain
-no respondent data. The six responses do not estimate national indicators.
+The report, research-style passages, and occupation responses were created
+as fictional teaching materials. They contain no real respondent data.
+The six responses do not estimate national indicators.
 
 ## Example facts and original materials
 

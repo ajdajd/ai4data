@@ -17,15 +17,14 @@ Group guidance or policy. Its [contributing page](./contributing.md) explains
 how to propose corrections.
 :::
 
-Data annotation makes a person's interpretation explicit as a label attached
-to a record or a selected region. The result may support data curation,
-statistical processing, model development, evaluation, or other applications.
-The immediate task is to prepare appropriate inputs, apply consistent labels,
-and obtain outputs whose meaning can be checked.
+Data annotation assigns descriptive labels to records or selected regions,
+such as a table on a document page, a dataset name in a passage, or a survey
+response. These labels can support data curation, statistical processing,
+model development, and evaluation.
 
 This guide covers three tasks: figure/table bounding boxes with Label Studio,
-dataset-mention spans with doccano, and occupation-response categories with
-doccano. Each chapter contains its own setup, annotation, and export path.
+dataset-mention spans with doccano, and text classification with doccano. Each chapter contains its own
+setup, annotation, and export path.
 Readers can start with whichever chapter matches their task. No chapter is
 a prerequisite for another, and none requires model inference.
 
@@ -37,15 +36,16 @@ exports can also be reviewed for their intended meaning.
 
 ## Prerequisites
 
-- A data practitioner or statistical data curator can use a browser and run the chapter's shell commands with Python 3.10 in an isolated environment.
+- The reader can use a browser and a terminal, run commands, and create an isolated Python 3.10 environment.
 - The machine can install the selected annotation tool, retain its local database, and store the example files and rendered images.
-- An annotator understands the task's inclusion rules; a coding supervisor can resolve occupation responses that lack enough detail.
-- Software reuse at the AI-ready level requires checking source identifiers, labels, and coordinate or character units. AI-native extensions require additional provenance and verification and are outside this pass.
+- Annotators can follow the supplied labeling rules to decide which regions or words to select and which categories to assign.
+- A reviewer can check uncertain decisions against those rules. Records with insufficient information remain marked for review until a category can be supported.
 
-The commands assume a local exercise on Linux or a compatible shell such as
-WSL. Each chapter links official platform alternatives. Local services and
-state should be kept separate from other projects. Installation and browser
-verification limits are recorded in
+The recipes begin with manual labeling and do not require programming or
+model-training experience. Each chapter links to the tool's official
+installation documentation for operating-system-specific instructions.
+Local services and their databases should be kept separate from other projects.
+Installation and browser verification limits are recorded in
 [verification.md](pathname:///cookbook-files/open-source-data-annotation/verification.md).
 
 ## First steps
@@ -66,7 +66,7 @@ Optional model-assisted annotation is reserved for a later pass.
 |---|---|---|
 | [1. Bounding-box annotation](./bounding-boxes.mdx) | How can figures and tables in PDF documents become reviewed spatial annotations? | Multipage PDF tasks, Figure/Table rules, native JSON, coordinate units, and adapter concepts |
 | [2. Named entity annotation](./dataset-mentions.mdx) | How can dataset mentions in research text become reviewed entity spans? | Independent doccano setup, DATASET spans, unchanged text, native JSONL, and Unicode checks |
-| [3. Text classification and statistical coding](./response-classification.mdx) | How can open-ended occupation responses become consistent reviewed categories? | Independent doccano setup, single-label coding, ISCO subset, review cases, and native JSONL |
+| [3. Text classification and statistical coding](./response-classification.mdx) | How can free-text responses be classified and reviewed using a defined set of categories? | Independent doccano setup, single-label coding, ISCO subset, review cases, and native JSONL |
 
 ## Maturity levels
 
@@ -81,24 +81,17 @@ demonstrates a technique without establishing the maturity of an organization.
 
 ## Running example
 
-The National Statistics Office (example) produces a fictional Labour Force
-Survey and a labour market report. This guide uses report `EX-REP-2025-02`
-and survey round `EX-LFS-2025-Q2`, already identified in the shared
-[example facts](pathname:///cookbook-files/_example/facts.json).
+The exercises use a sample PDF, short text passages, and survey-style
+responses to practice marking figures and tables, identifying dataset
+mentions, and assigning categories. These inputs were created for teaching
+and contain no real respondent data.
 
-The original two-page PDF contains a chart and table of the example's
-unemployment rates, 6.3% for 2025-Q1 and 6.1% for 2025-Q2. The latter is
-provisional. Seven fictional research-style passages refer to example
-datasets, and six fictional occupation responses illustrate coding decisions.
-The six responses do not generate the national indicators and are not a
-statistically meaningful sample. The files are related teaching materials,
-not a claim that one annotation task produces another task's inputs.
-
-The PDF is supplied ready to use. Its build script reads the shared facts
-when rebuilding the file; the annotation workflow does not require rebuilding.
-The [source notes](pathname:///cookbook-files/open-source-data-annotation/sources.md)
-describe provenance, licensing, and the distinction between captured service
-exports and actual human browser review.
+Each chapter supplies the inputs and labeling rules for its exercise, then
+shows how to inspect the exported annotations. The exercises can be completed
+independently without collecting a new dataset. The Files table below lists
+the downloads, and the
+[source notes](pathname:///cookbook-files/open-source-data-annotation/sources.md)
+explain where the teaching materials and example exports come from.
 
 ## Scope of the examples
 
