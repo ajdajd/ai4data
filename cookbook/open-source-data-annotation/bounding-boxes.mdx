@@ -16,9 +16,10 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 ## Rationale
 
 Data annotation assigns labels to records or regions that a person can inspect.
-For a PDF, a bounding box identifies both the kind of object and its position
-on a page. A collection of boxes can support document indexing, data curation,
-or later work with an extraction system.
+An image bounding box locates a region on a rendered PDF page, and its
+annotation label identifies the kind of content. A collection of labeled
+boxes can support document indexing, data curation, or later work with an
+extraction system.
 
 Label Studio displays rendered page images and records rectangles without
 changing the source PDF. A multipage task keeps the pages of one document
@@ -138,9 +139,24 @@ The complete standalone implementation is available for inspection here.
 ```python file=../../website/static/cookbook-files/open-source-data-annotation/create_pdf_project.py
 ```
 
-**Worked example.** The input directory contains one two-page PDF, so the
-intended result is one task with two entries in `data.pages`. The first page
-shows Figure 1 and the second shows Table 1. The same command processes
+**Worked example.** The Python 3.10 service check on November 12, 2026 used
+the supplied two-page PDF and printed the following output:
+
+```text
+Created project 2: 1 PDF task(s).
+Rendered 2 page(s).
+Tasks: /tmp/annotation-labelstudio-media/documented/tasks.json
+Open http://127.0.0.1:18080/projects/2/data
+```
+
+Project ID `2`, the absolute `/tmp/` path, and port `18080` belong to that
+temporary verification installation. Each installation prints its own project
+ID, output path, and server address. The command above uses port `8080` and
+batch `lfs-q2`, so its path and URL will differ. The check is one PDF task,
+two rendered pages, and a project address that opens both pages in the browser.
+The first page shows Figure 1 and the second shows Table 1.
+
+The same command processes
 multiple PDFs when they are placed in the input directory. Batches of about
 10–20 PDFs are a practical starting guideline, adjusted for length,
 complexity, and available resources. This is not a technical limit.
@@ -156,7 +172,7 @@ batch before retrying; the script does not delete partial work automatically.
 
 **Result:** The document task contains submitted rectangles labeled Figure and Table.
 
-A label identifies the kind of region. A boundary rule defines how much of
+An annotation label identifies the kind of region. A boundary rule defines how much of
 the page belongs inside that region. Without a common rule, two annotators
 can select the same chart while including different titles or notes.
 
@@ -234,15 +250,20 @@ the rectangle drawn in the UI. Normalized XYXY uses two corners as fractions
 of the image dimensions, whereas Label Studio stores an origin and size as
 percentages.
 
-An adapter transforms a tool's representation into the format a downstream
-application requires. Such a transformation may map labels, coordinate units,
-image identity, and annotation status. [COCO](https://cocodataset.org/#format-data)
-is a widely used computer-vision format. The World Bank
+The native Label Studio JSON remains the annotation record. When a downstream
+application requires another representation, a format-conversion adapter
+transforms the export, including the required label, coordinate, image-identity,
+and annotation-status mappings. [COCO](https://cocodataset.org/#format-data)
+is a widely used computer-vision format that can serve as such a destination.
+The receiving application's requirements determine the format to use.
+
+The World Bank
 [Data Snapshot dataset](https://huggingface.co/datasets/ai4data/data-snapshot)
-documents a custom unified evaluation schema with document/page identity,
-normalized boxes, and a shared representation for ground truth and detector
-predictions. Model-specific adapters make detector outputs comparable under
-that contract.
+provides an example of a project-specific destination: its custom unified
+evaluation schema records document/page identity and normalized boxes in a
+shared representation for ground truth and detector predictions. In the
+benchmarking workflow, model-specific format-conversion adapters translate each
+detector's output into that common contract.
 
 **What this does not do.** An export does not certify annotation quality or
 include every source file. This pass supplies neither a Data Snapshot

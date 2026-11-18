@@ -18,7 +18,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 A dataset can be mentioned by its full name, an acronym, or a description.
 Named entity annotation marks the exact part of a passage that refers to the
 data source. A span is a continuous selection of characters, with a start
-position, an end position, and a label that describes the selection.
+position, an end position, and an annotation label that describes the selection.
 
 Doccano provides a sequence-labeling project for this task. It keeps the
 passage and the selected character positions together in its native export.
@@ -114,9 +114,9 @@ doccano task --concurrency 1
 
 4. Open `http://127.0.0.1:8000` and sign in. Create a **Sequence Labeling**
    project named `Labour report dataset mentions`. Disable overlapping
-   entities, grapheme mode, and relation annotation for this exercise. Grapheme
-   mode groups displayed characters differently from the code-point offsets
-   used by the validator. In **Labels**, add
+   entities, grapheme mode, and relation annotation for this exercise. These
+   settings keep the export compatible with the simple span check in
+   Recipe 2.3. In **Labels**, add
    the exact label `DATASET`.
 5. In **Dataset**, use **Actions → Import Dataset** and select JSONL. Set the
    text column to `text` and the label column to `label`. The unlabeled input
@@ -186,11 +186,10 @@ position is included and the end position is excluded. Thus `text[12:31]`
 selects the nineteen characters of `Labour Force Survey` in `p01`.
 These positions are not UTF-8 byte counts.
 
-Changing whitespace, line endings, accents, or Unicode normalization can
-move offsets. The validator compares every exported passage with its source
-before using Python Unicode code-point positions to display spans. The
-Unicode round-trip checks in the manual checklist remain necessary for the
-selected application's browser interface.
+The validator compares every exported passage with its original source before
+displaying the selected words. Keeping the text unchanged after annotation
+preserves the reference for these positions. Additional character-handling
+checks are described in this chapter's Verification section.
 
 1. Use **Actions → Export Dataset**, choose ordinary sequence-labeling
    **JSONL**, and include the complete reviewed set. Extract the download
@@ -202,8 +201,8 @@ selected application's browser interface.
    installed release before interpreting these fields.
 3. Run the check below from the directory containing the original passages,
    export, and downloaded script. Review the displayed text against the
-   annotation policy. Confirm the selections in `p06` and `p07` particularly
-   carefully because an emoji and a combining accent precede a mention.
+   annotation policy. Use the additional verification checks below for the
+   character-handling examples in `p06` and `p07`.
 
 The command reads both files without modifying them. It rejects changed text,
 missing or duplicate source identifiers, invalid offsets, unknown labels, and
@@ -282,6 +281,18 @@ quality. Relation-enabled exports are outside this introductory format.
 - Read the reconstructed spans and compare them with the labeling rules.
 - Check a reviewed negative separately from an unfinished record in the UI.
 - Complete the [Unicode and browser checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md) before treating arbitrary Unicode offset behavior as verified.
+
+The additional Unicode checks concern how software counts characters. The
+validator uses Python Unicode code points, with an exclusive end position.
+Grapheme mode groups displayed characters differently, which is why it remains
+disabled in the example project. Changing whitespace, line endings, accents,
+or Unicode normalization after labeling can move offsets.
+
+The `p06` and `p07` passages preserve composed and combining accents, a leading
+emoji, and a newline so that these cases can be checked explicitly. Backend
+persistence was verified, but browser selection still needs the manual
+round-trip check. Compare the browser's highlighted words with `text[start:end]`
+without changing or normalizing the source text.
 
 ## Checklist
 

@@ -28,6 +28,8 @@ chapters. Edit terms here; never edit the generated pages.
 
 **Annotation.** Optional properties on a tool that describe its behaviour (for example that it is read-only); hints that clients treat as untrusted unless the server is trusted.
 
+**Annotation label.** A category attached to a data record or selected region, such as Figure, Table, DATASET, or an occupation code. Its meaning follows the task's labeling rules.
+
 **API.** Application programming interface: the address at which a program asks a system for data and receives it in a structured form.
 
 **Artifact class.** The kind of object a schema describes, defined by its analytical purpose, boundaries, and expected diversity. A member of the class is an artifact.
@@ -167,6 +169,8 @@ chapters. Edit terms here; never edit the generated pages.
 
 **Flagged.** The status of an extracted value that failed a check and awaits correction with the page open.
 
+**Format-conversion adapter.** A script that transforms one data representation into another, including the required mapping of labels, coordinates, and record identifiers. The destination format is determined by the consuming application.
+
 **Fully synthetic.** A file in which every value is generated; the subject of this guide.
 
 **Gap.** The distance between a dimension's current level and its target, measured in levels and in the number of questions below the target's value.
@@ -206,6 +210,8 @@ chapters. Edit terms here; never edit the generated pages.
 **Held-out validation.** Assessment of an operational schema against artifacts excluded from its initial development, with candidate findings and explicit claim limits.
 
 **Human adjudication.** A documented human decision about the evidence, scope, materiality, and appropriate treatment of a proposed concept or schema change.
+
+**Image bounding box.** A rectangle that locates a region on an image. Its coordinates may describe an origin and size or two opposite corners, using pixels, percentages, or normalized fractions as specified by the format. Label Studio stores an origin and size as image percentages; an associated annotation label identifies the content.
 
 **Improvement pathway.** The document, generated from the profile, the targets, the sequence, and the estimate, that a board approves and a funder reads, with the narrative and the dates added by the planning team.
 

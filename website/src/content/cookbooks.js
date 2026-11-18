@@ -216,7 +216,7 @@ export function cookbookPage(pathname) {
 const allGroups = [
   {
     title: 'Data products that AI can use',
-    ids: ['ai-ready-dissemination', 'microdata-documentation', 'data-from-documents', 'data-snapshot-end-to-end', 'ml-ready-datasets'],
+    ids: ['ai-ready-dissemination', 'microdata-documentation', 'open-source-data-annotation', 'data-from-documents', 'data-snapshot-end-to-end', 'ml-ready-datasets'],
   },
   {
     title: 'Metadata and interfaces',

@@ -51,12 +51,13 @@ an expected export must not be presented as an observed export.
 
 ## Glossary scope
 
-The qualified term **Data annotation** describes labeling records or regions.
-The existing shared **Annotation** entry describes tool metadata and has not
-been redefined. The glossary generator matches words without disambiguating
-their senses, so that tool-metadata entry can also appear in this glossary.
-This limitation is documented here. The generator and unrelated definitions
-remain unchanged. New terms belong in the shared glossary before regeneration.
+The qualified terms **Data annotation**, **Annotation label**,
+**Image bounding box**, and **Format-conversion adapter** describe the meanings
+used by the recipes. Add definitions to `cookbook/_shared/glossary.md` and run
+the existing generator; do not edit this cookbook's generated glossary by hand.
+The generator selects terms by substring matching without disambiguating their
+senses, so unrelated entries and other meanings can also appear. This known
+limitation remains; the generator and existing definitions are unchanged.
 
 ## Pass 2 scope
 

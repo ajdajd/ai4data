@@ -17,8 +17,8 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 An occupation response describes work in a respondent's own words. Statistical
 coding assigns a category from an established classification using the work
-described. Text classification applies the category to the whole response;
-it does not mark individual character spans.
+described. Text classification applies an annotation label to the whole
+response. The label records the category assigned to that response.
 
 Doccano can present each response with a small list of allowed categories.
 A codebook states what those categories mean and how uncertain cases are
@@ -157,7 +157,8 @@ the category, and `teaching_rule` states the decision used in this example.
 3. Assign `NEEDS_REVIEW` to “works in a shop” and “helps at home”. The first
    does not establish a listed occupation, and the second does not explain
    the work or employment context. This label is a workflow status. It is
-   separate from valid ISCO codes and can flag a response outside this limited codebook.
+   separate from valid ISCO codes and can flag a response outside this limited
+   codebook.
 4. Correct one deliberately mistaken selection by replacing it with the
    supported label. Confirm completion in the tool and reopen the record
    to check that only one category remains saved.

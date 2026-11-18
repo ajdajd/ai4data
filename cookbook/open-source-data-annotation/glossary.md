@@ -13,6 +13,8 @@ description: Terms used in the open-source-data-annotation cookbook, in plain la
 
 **Annotation.** Optional properties on a tool that describe its behaviour (for example that it is read-only); hints that clients treat as untrusted unless the server is trusted.
 
+**Annotation label.** A category attached to a data record or selected region, such as Figure, Table, DATASET, or an occupation code. Its meaning follows the task's labeling rules.
+
 **API.** Application programming interface: the address at which a program asks a system for data and receives it in a structured form.
 
 **Benchmark (population).** The share of each group in the population, from the census or population estimates, against which a dataset's composition is compared.
@@ -28,6 +30,10 @@ description: Terms used in the open-source-data-annotation cookbook, in plain la
 **DDI.** The Data Documentation Initiative, the standard for documenting surveys and their variables, value labels, and files; the World Bank microdata schema is based on it.
 
 **Decision.** A curator's recorded verdict on a suggestion: accept, edit (with the final text), or reject (with a reason).
+
+**Format-conversion adapter.** A script that transforms one data representation into another, including the required mapping of labels, coordinates, and record identifiers. The destination format is determined by the consuming application.
+
+**Image bounding box.** A rectangle that locates a region on an image. Its coordinates may describe an origin and size or two opposite corners, using pixels, percentages, or normalized fractions as specified by the format. Label Studio stores an origin and size as image percentages; an associated annotation label identifies the content.
 
 **ISCO-08.** The International Standard Classification of Occupations, whose four-digit codes classify jobs; the label of the coding examples in this guide.
 
