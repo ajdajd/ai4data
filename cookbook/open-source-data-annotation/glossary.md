@@ -33,6 +33,8 @@ description: Terms used in the open-source-data-annotation cookbook, in plain la
 
 **Format-conversion adapter.** A script that transforms one data representation into another, including the required mapping of labels, coordinates, and record identifiers. The destination format is determined by the consuming application.
 
+**Gate.** The rule that decides whether a change ships, applied to a paired comparison of the evaluation suite before and after the change.
+
 **Image bounding box.** A rectangle that locates a region on an image. Its coordinates may describe an origin and size or two opposite corners, using pixels, percentages, or normalized fractions as specified by the format. Label Studio stores an origin and size as image percentages; an associated annotation label identifies the content.
 
 **ISCO-08.** The International Standard Classification of Occupations, whose four-digit codes classify jobs; the label of the coding examples in this guide.

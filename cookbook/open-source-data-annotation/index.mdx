@@ -81,10 +81,13 @@ demonstrates a technique without establishing the maturity of an organization.
 
 ## Running example
 
-The exercises use a sample PDF, short text passages, and survey-style
-responses to practice marking figures and tables, identifying dataset
-mentions, and assigning categories. These inputs were created for teaching
-and contain no real respondent data.
+The exercises reuse materials from other cookbooks: the published policy
+brief used in the Data Snapshot cookbook, the sentence sample from the
+Monitoring of Data Use cookbook, and the occupation responses from the
+Language Models in Production cookbook. They support practice in marking
+figures and tables, identifying data-source mentions, and assigning categories.
+The policy brief is a real publication; the sentence sample and occupation
+responses are fictional teaching inputs.
 
 Each chapter supplies the inputs and labeling rules for its exercise, then
 shows how to inspect the exported annotations. The exercises can be completed
@@ -103,13 +106,17 @@ training, custom completion system, or downstream evaluation converter.
 
 ## Files
 
+Chapter 1 uses the [Shona policy brief PDF](https://reliefweb.int/attachments/831aca28-6777-4cb9-9b84-8976c63061fb/Policy%20Brief%20on%20Shona%20community_From%20Stateless%20to%20Citizens.pdf)
+from its publisher, as in the [Data Snapshot cookbook](/cookbook/data-snapshot-end-to-end/preparation).
+The full publication is not included among the cookbook downloads.
+
 | File | Used in |
 |---|---|
-| [EX-REP-2025-02.pdf](pathname:///cookbook-files/open-source-data-annotation/EX-REP-2025-02.pdf) | Chapter 1 uses the original two-page fictional report. |
 | [create_pdf_project.py](pathname:///cookbook-files/open-source-data-annotation/create_pdf_project.py) | Chapter 1 renders a PDF directory and creates multipage tasks through the API. |
 | [multipage-labels.xml](pathname:///cookbook-files/open-source-data-annotation/multipage-labels.xml) | Chapter 1 configures Figure and Table rectangles. |
-| [build_example.py](pathname:///cookbook-files/open-source-data-annotation/build_example.py) | Chapter 1's input can be rebuilt from the shared example facts. |
-| [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl) | Chapter 2 imports seven unchanged passages with source identifiers. |
+| [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl) | Chapter 2 imports the 14 unchanged sentences reused from the Data Use sample. |
+| [unicode-passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/unicode-passages.jsonl) | Chapter 2 optionally checks two separate Unicode passages. |
+| [unicode-export.jsonl](pathname:///cookbook-files/open-source-data-annotation/unicode-export.jsonl) | Chapter 2 checks native Unicode span representations separately from the main sample. |
 | [responses.jsonl](pathname:///cookbook-files/open-source-data-annotation/responses.jsonl) | Chapter 3 imports six unlabeled occupation responses. |
 | [occupation-codebook.csv](pathname:///cookbook-files/open-source-data-annotation/occupation-codebook.csv) | Chapter 3 defines four ISCO categories and one review status. |
 | [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt) | Chapters 2 and 3 install the same isolated doccano environment independently. |

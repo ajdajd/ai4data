@@ -1,126 +1,130 @@
-# Pass 1 verification record
+# Annotation workflow verification record
 
-Checked on November 12, 2026. This record distinguishes service execution,
-deterministic file checks, and browser actions. No model inference was run.
+## Input reuse checks — November 18, 2026
 
-## Environments
+The current PDF exercise uses the published Shona policy brief from the
+Data Snapshot cookbook. The main entity exercise reuses all 14 sentences
+from the Monitoring of Data Use cookbook. The original two Unicode cases
+are separate optional inputs. The occupation exercise is unchanged.
+No model weights were downloaded and no inference was run.
 
-The tool checks used isolated Python 3.10.19 environments and new temporary
-SQLite databases. They did not modify existing annotation projects. The
-repository's existing Python 3.13 environment ran the offline tests and
-documentation checks. Docker access was unavailable, so container setup was
-not tested.
+The PDF check used an existing local copy of the 12-page publication at
+300 DPI. Its text and rendered PDF page 4 were inspected to locate Figure 1
+and Table 1. The publisher links identify the source, but automated retrieval
+returned an access error during this check. The full PDF is not bundled or
+redistributed with this cookbook.
 
-Label Studio 1.22.0 installed and started. The standalone PDF command also
-ran under Python 3.10 with PyMuPDF 1.28.2 and requests 2.32.5. Legacy token
-authentication was enabled on the temporary organization. Its first startup
-had already created that organization without legacy tokens, so the later
-CLI flag alone did not update the existing token setting. Recipe 1.1 includes
-the corresponding organization-settings check.
+## Environments and installation
 
-Doccano 1.8.4 installed with the supplied requirements-doccano.txt bounds.
-An unconstrained installation failed because environs expected marshmallow 3,
-doccano's parsers expected Pydantic 1, and an older dependency imported
-pkg_resources. The NumPy 1 bound preserves pandas 1.5's binary compatibility.
-The auto-labeling package was pinned because its newer release required a
-Pydantic 2 API during application startup. No automatic labeling was used.
-Database initialization and user creation completed, and the real task
-worker handled imports and exports. The test web application ran through
-the same Gunicorn WSGI entry point on a loopback-only port with one worker.
+The API checks used isolated Python 3.10.19 environments, new temporary
+SQLite databases, and loopback-only web applications. Existing annotation
+projects were not modified. Label Studio 1.22.0 used PyMuPDF 1.28.2 and
+requests 2.32.5. Legacy-token authentication was enabled on its temporary
+organization. The repository's Python 3.13 environment ran offline checks.
+
+Doccano 1.8.4 used the supplied requirements-doccano.txt bounds. Its published
+package metadata requires Pydantic 2, conflicting with the Pydantic 1 pin
+used by the tested import/export environment. A plain resolver install of that file
+fails. The recipes therefore use uv with the same file as an explicit
+override, which reproduced the working environment. Marshmallow 3,
+NumPy 1, setuptools 80.9.0, and auto-labeling-pipeline 0.1.21 remain pinned
+for the compatibility reasons described in the requirements file. No
+automatic labeling was used. A real task worker handled imports and exports;
+the web application used Gunicorn with one worker on a loopback-only port.
 
 ## Executed Label Studio checks
 
-- The standalone command accepted a directory containing the supplied PDF.
-- It rendered two PNGs, created one project, configured local storage, and
-  imported one multipage task with source_file and page_count metadata.
-- Both authenticated local-media requests returned HTTP 200 with image data.
-- The configured Figure and Table results were submitted through the API,
-  associated with page indices 0 and 1, and persisted in the task.
-- An API update changed a rectangle, added a temporary result, and removed
-  that result. The final native exporter returned one task with two regions.
-- The exact documented Python 3.10 rendering dependencies also created a
-  second fresh project successfully.
+- The unchanged standalone command accepted a directory containing the full
+  Shona PDF and created one task with 12 ordered page images.
+- A separate offline rendering check also produced one task with 12 pages.
+- All 12 authenticated local-media requests returned HTTP 200 and image data.
+- Two rectangles were entered through the API for Figure 1 and Table 1 on
+  PDF page 4, both with item_index 3. An API update changed and then restored
+  the figure boundary.
+- The native exporter returned one 12-page task with the two saved regions.
+  Its response bytes are labelstudio-export.json. No detector predictions
+  or model-generated labels were used.
 
-The downloadable labelstudio-export.json is the actual native export after
-those operations. It is an API-entered service fixture, not evidence that a
-person drew or reviewed the boxes in a browser. Its local image paths refer
-to the temporary verification batch.
+The standalone command printed the following actual output in the temporary
+verification installation. Project IDs, absolute paths, and ports vary by
+installation; the chapter's command uses port 8080 and batch shona.
+
+    Created project 1: 1 PDF task(s).
+    Rendered 12 page(s).
+    Tasks: /tmp/annotation-reuse-pdf-check/media/verified-shona/tasks.json
+    Open http://127.0.0.1:18081/projects/1/data
+
+The two page-4 rectangles demonstrate the native representation. They are
+not a complete annotation of all 12 source pages, independently adjudicated
+ground truth, or evidence of browser drawing.
 
 ## Executed doccano checks
 
-- Sequence-labeling and single-label classification projects were created.
-- Imports used the actual file-upload API and task worker. Omitting the
-  configured label field initially produced import warnings. Supplying the
-  native empty list, label: [], produced error-free imports into fresh projects.
-- Seven passages and six occupation responses retained their stable source
-  identifiers in metadata and later in the flattened native export records.
-- Eight entity spans and six category assignments were entered through the
-  API. The negative passage was confirmed without an entity label.
-- All records were confirmed through the service and exported with the
-  confirmed-record filter. Each archive contained annotator.jsonl.
-- Both native JSONL files passed inspect_doccano.py against the original text.
-- The backend persisted offsets after a composed accent, a leading emoji,
-  a decomposed accent, and a newline. Python slicing reconstructed the
-  intended dataset names. Grapheme mode was disabled.
-- Creating a replacement occupation category left exactly one category in
-  single-label mode. The intended code was restored. A temporary entity
-  selection was created and deleted, leaving the intended span intact.
+- A fresh sequence-labeling project imported the 14-sentence JSONL through
+  the file-upload API and real task worker with no import errors.
+- Every sentence and D01–D06 document identifier remained unchanged; source_id
+  values m01–m14 identify CSV rows in source order.
+- Twelve spans were entered through the API using the reused CSV reference
+  phrases. The capital T in m07's original sentence was preserved even
+  though the CSV reference phrase begins with a lowercase t.
+- An overlong selection was created and corrected through the API. All 14
+  records, including both negatives, were confirmed through the service.
+- The confirmed-record native exporter produced entities-export.jsonl with
+  14 records and 12 spans.
+- A separate fresh project imported unicode-passages.jsonl with overlapping
+  entities, relations, and grapheme mode disabled. Both records were
+  confirmed and exported as unicode-export.jsonl with two spans. Backend
+  persistence retained composed and combining accents, an emoji, and a newline.
+- Both JSONL fixture files were extracted from the real exporter archives
+  without rewriting their records. inspect_doccano.py validates them against
+  their corresponding unchanged inputs.
 
-The downloadable entities-export.jsonl and codes-export.jsonl are the actual
-native exporter files, without postprocessing. The semantic labels are
-teaching decisions entered through the API, not independently adjudicated
-human reference labels. Internal IDs are installation-specific.
+The labels are teaching/reference decisions entered through the API, not
+independently reviewed human annotations. Correct offsets do not establish
+semantic correctness or browser compatibility.
 
-## Offline checks
+## Offline and website checks
 
-The focused cookbook suite covers PDF rebuilding against shared facts,
-document/page grouping, duplicate basenames, uppercase PDF extensions,
-refusal to overwrite batches, unsafe batch paths, HTTP failure preservation,
-source identity, changed text, Unicode code-point spans, invalid entity
-bounds, single string-valued categories, and the captured native exports.
+- The focused annotation suite passed 19 tests. The complete cookbook CI
+  test command passed 158 tests; its three warnings were the existing RDFLib
+  JSON-LD parser deprecations.
+- The tests compare all 14 imported sentences, source IDs, and document IDs
+  with the unchanged Data Use CSV and check native spans against its reference
+  phrases. The optional Unicode and unchanged classification fixtures pass
+  the same source-preservation checks.
+- PDF setup safety tests create a minimal two-page PDF in temporary storage,
+  so automated tests need no publisher download. The real 12-page rendering
+  and API checks are recorded separately above.
+- Strict validation passed for all 17 cookbooks with zero errors or warnings.
+  Index/card synchronization, shared example facts, glossary drift, and
+  quoted-output checks passed. The glossary generator remains unchanged;
+  only this cookbook's generated page changed.
+- Black, Ruff lint/format, and git diff --check passed. The website build
+  succeeded with the existing hub/tools anchor warnings.
 
-Executed repository checks passed:
+## Earlier verification and unchanged occupation exercise
 
-- The focused annotation suite passed 19 tests. The existing cookbook CI test
-  command, extended with that suite, passed 158 tests. Its three warnings came
-  from the existing RDFLib JSON-LD parser deprecation.
-- Strict validation passed for all 17 cookbooks with zero errors and warnings.
-- Index/card synchronization reported zero changes or missing items. Glossary
-  checks and shared example facts reported no differences or findings.
-- Quoted-output checks passed across all 17 cookbooks, including both actual
-  native-export validator examples in this guide.
-- Black, Ruff lint, and Ruff format checks passed for the new Python files.
-  The existing global cookbook/script lint and investment-view check passed.
-- The Docusaurus build and subsequent CI-mode build succeeded. Seven new
-  routes were registered. All seven built pages carried noindex metadata,
-  and the hidden cookbook's downloads were removed from production output
-  as configured. Existing hub/tool anchor warnings remain outside this change.
-- The development preview returned HTTP 200 for all seven pages and all
-  sixteen downloadable files. Each download matched the source bytes.
-  Rendered chapters contained all nine recipe headers, and their internal
-  page links resolved. The hidden cookbook was absent from landing-page links.
+The November 12, 2026 run used an original two-page fictional PDF and seven
+constructed entity passages. Those main inputs and their native fixtures
+have been replaced. The two Unicode input cases are retained separately.
+Historical two-page counts and page indices do not describe the Shona task.
 
-The quoted validator outputs in the chapters are executable against the
-captured fixtures. They are not invented UI results. The shared facts and
-all source inputs remain unchanged by the validators.
+The occupation input, codebook, and codes-export.jsonl are unchanged from
+that run. The native classification exporter had preserved six confirmed
+records, four official-code assignments, and two NEEDS_REVIEW assignments.
+Those labels were API-entered teaching decisions, and the current offline
+validator still checks them against their original inputs. Classification
+browser interactions have not been tested.
 
 ## Remaining manual verification
 
-Browser-based drawing, resizing, deleting, selecting spans, keyboard behavior,
-completion controls, reopening saved work, and exporting through the UI have
-not been exercised in this environment. In particular, backend Unicode
-persistence does not establish that browser selection uses the same offsets
-for every string. Complete manual-testing.md on the installed release,
-including the emoji and combining-accent cases, before claiming full browser
-compatibility.
+Complete manual-testing.md for browser drawing, resizing, deleting,
+selecting spans, completion controls, reopening saved work, and UI exports.
+Backend persistence does not establish that browser Unicode selection uses
+the same offsets for every string. Compare the emoji and combining-accent
+cases directly before claiming browser compatibility.
 
-The installation was tested on this Linux environment only. Windows, macOS,
-Docker, multiuser operation, long documents, and large batches remain untested.
-The 10–20 PDF batch suggestion is a starting practice guideline, not measured
-capacity. No screenshots are supplied because none were captured from the UI.
-
-## Pass 2 boundary
-
-DocLayout-YOLO and GLiNER2 integration, model downloads, model-assisted
-classification, training, custom page-completion tracking, and downstream
-COCO/evaluation converters were neither implemented nor executed.
+The service rerun was on Linux only. Windows, macOS, Docker, multiuser use,
+long documents beyond this publication, and large batches remain untested.
+The 10–20 PDF batch suggestion is a starting guideline, not measured capacity.
+No browser screenshots or model-assisted workflows are supplied.

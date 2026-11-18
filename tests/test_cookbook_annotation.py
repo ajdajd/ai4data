@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import importlib.util
 import json
 from pathlib import Path
@@ -35,47 +36,70 @@ def load_script(name: str) -> ModuleType:
     return module
 
 
-def test_pdf_matches_shared_facts(tmp_path: Path) -> None:
-    """Rebuild the report and check its page order and fictional values.
+@pytest.fixture
+def pdf_bytes() -> bytes:
+    """Create a minimal multipage PDF for offline setup tests.
 
-    Parameters
-    ----------
-    tmp_path : pathlib.Path
-        Temporary output directory.
+    Returns
+    -------
+    bytes
+        Two-page PDF independent of the publisher's downloadable document.
     """
-    output = tmp_path / "report.pdf"
-    builder = load_script("build_example")
-    facts_path = ROOT / "website/static/cookbook-files/_example/facts.json"
-    assert builder.main(["--facts", str(facts_path), "--output", str(output)]) == 0
-    facts = json.loads(facts_path.read_text())
-    for path in [output, ASSETS / "EX-REP-2025-02.pdf"]:
-        with pymupdf.open(path) as document:
-            assert len(document) == 2
-            assert "Figure 1." in document[0].get_text()
-            assert "Table 1." in document[1].get_text()
-            for value in facts["series"]["LF_UNEMP_PCT"]["values"].values():
-                assert str(value) in document[1].get_text()
-            assert "Fictional" in document[0].get_text()
-    before = output.read_bytes()
-    assert builder.main(["--facts", str(facts_path), "--output", str(output)]) == 1
-    assert output.read_bytes() == before
+    with pymupdf.open() as document:
+        document.new_page()
+        document.new_page()
+        return document.tobytes()
 
 
-def test_directory_tasks_preserve_documents_and_pages(tmp_path: Path) -> None:
+def test_reused_passages_match_data_use_sample() -> None:
+    """Preserve every source sentence and document ID without revealing labels."""
+    sample = (
+        ROOT / "website/static/cookbook-files/monitoring-data-use/labelled_sample.csv"
+    )
+    with sample.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    records = [
+        json.loads(line)
+        for line in (ASSETS / "passages.jsonl").read_text().splitlines()
+    ]
+    exported = load_script("inspect_doccano").read_records(
+        ASSETS / "entities-export.jsonl"
+    )
+    assert len(records) == len(rows) == 14
+    for index, (row, record) in enumerate(zip(rows, records), 1):
+        assert record == {
+            "source_id": f"m{index:02d}",
+            "document_id": row["document_id"],
+            "text": row["sentence"],
+            "label": [],
+        }
+        spans = exported[record["source_id"]]["label"]
+        if row["mention_text"]:
+            assert len(spans) == 1
+            start, end, label = spans[0]
+            assert label == "DATASET"
+            assert record["text"][start:end].lower() == row["mention_text"].lower()
+        else:
+            assert spans == []
+
+
+def test_directory_tasks_preserve_documents_and_pages(
+    tmp_path: Path, pdf_bytes: bytes
+) -> None:
     """Keep same-named PDFs in separate tasks and refuse an existing batch.
 
     Parameters
     ----------
     tmp_path : pathlib.Path
         Temporary input and media root.
+    pdf_bytes : bytes
+        Minimal two-page PDF fixture.
     """
     source = tmp_path / "input"
     for directory in ["first", "second"]:
         folder = source / directory
         folder.mkdir(parents=True)
-        (folder / "report.PDF").write_bytes(
-            (ASSETS / "EX-REP-2025-02.pdf").read_bytes()
-        )
+        (folder / "report.PDF").write_bytes(pdf_bytes)
     output = tmp_path / "media" / "batch"
     script = load_script("create_pdf_project")
     tasks = script.prepare_tasks(source, output, "batch")
@@ -112,7 +136,7 @@ def test_invalid_batch_cannot_escape(tmp_path: Path, batch: str) -> None:
 
 
 def test_project_creation_and_partial_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, pdf_bytes: bytes
 ) -> None:
     """Exercise the API sequence and preserve a batch after a failed import.
 
@@ -122,11 +146,13 @@ def test_project_creation_and_partial_failure(
         Temporary PDF input and media root.
     monkeypatch : pytest.MonkeyPatch
         Environment and HTTP replacements.
+    pdf_bytes : bytes
+        Minimal two-page PDF fixture.
     """
     script = load_script("create_pdf_project")
     source = tmp_path / "pdfs"
     source.mkdir()
-    (source / "report.pdf").write_bytes((ASSETS / "EX-REP-2025-02.pdf").read_bytes())
+    (source / "report.pdf").write_bytes(pdf_bytes)
     session = MagicMock()
     session.__enter__.return_value = session
     response = MagicMock()
@@ -283,6 +309,17 @@ def test_captured_service_exports() -> None:
     assert (
         script.main(
             [
+                "entities",
+                str(ASSETS / "unicode-export.jsonl"),
+                "--source",
+                str(ASSETS / "unicode-passages.jsonl"),
+            ]
+        )
+        == 0
+    )
+    assert (
+        script.main(
+            [
                 "classification",
                 str(ASSETS / "codes-export.jsonl"),
                 "--source",
@@ -295,12 +332,14 @@ def test_captured_service_exports() -> None:
     )
     tasks = json.loads((ASSETS / "labelstudio-export.json").read_text())
     assert len(tasks) == 1
-    assert tasks[0]["meta"]["source_file"] == "EX-REP-2025-02.pdf"
-    assert len(tasks[0]["data"]["pages"]) == 2
+    assert tasks[0]["meta"]["source_file"] == (
+        "policy_brief_on_shona_community_from_stateless_to_citizens.pdf"
+    )
+    assert len(tasks[0]["data"]["pages"]) == 12
     annotations = tasks[0]["annotations"]
     assert len(annotations) == 1 and not annotations[0]["was_cancelled"]
     regions = annotations[0]["result"]
     assert [(r["item_index"], r["value"]["rectanglelabels"]) for r in regions] == [
-        (0, ["Figure"]),
-        (1, ["Table"]),
+        (3, ["Figure"]),
+        (3, ["Table"]),
     ]

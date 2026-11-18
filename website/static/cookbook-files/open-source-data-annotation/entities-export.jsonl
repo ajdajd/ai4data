@@ -1,7 +1,14 @@
-{"id":14,"text":"We used the Labour Force Survey to describe employment.","source_id":"p01","document_id":"EX-REP-2025-02","label":[[12,31,"DATASET"]],"Comments":[]}
-{"id":15,"text":"The Labour Force Survey (LFS) supplies the indicators. LFS is cited again.","source_id":"p02","document_id":"EX-REP-2025-02","label":[[4,23,"DATASET"],[25,28,"DATASET"],[55,58,"DATASET"]],"Comments":[]}
-{"id":16,"text":"The Household Budget Survey 2021 provides a separate source on consumption.","source_id":"p03","document_id":"EX-REP-2025-02","label":[[4,32,"DATASET"]],"Comments":[]}
-{"id":17,"text":"The Population and Housing Census 2014 describes the population.","source_id":"p04","document_id":"EX-REP-2025-02","label":[[4,38,"DATASET"]],"Comments":[]}
-{"id":18,"text":"The authors discuss survey methods and a forthcoming report.","source_id":"p05","document_id":"EX-REP-2025-02","label":[],"Comments":[]}
-{"id":19,"text":"Café notes: the Labour Force Survey is cited here.","source_id":"p06","document_id":"EX-REP-2025-02","label":[[16,35,"DATASET"]],"Comments":[]}
-{"id":20,"text":"📊 Café notes: Labour Force Survey.\nThe same source is cited on this line.","source_id":"p07","document_id":"EX-REP-2025-02","label":[[15,34,"DATASET"]],"Comments":[]}
+{"id":1,"text":"We use the Household Budget Survey 2021 to estimate consumption per adult equivalent.","source_id":"m01","document_id":"D01","label":[[11,39,"DATASET"]],"Comments":[]}
+{"id":2,"text":"The HBS sample covers 6000 households in both urban and rural areas.","source_id":"m02","document_id":"D01","label":[[4,7,"DATASET"]],"Comments":[]}
+{"id":3,"text":"Our estimates are consistent with the official prevalence of undernourishment series.","source_id":"m03","document_id":"D01","label":[[47,84,"DATASET"]],"Comments":[]}
+{"id":4,"text":"As the National Statistics Office food security report 2025 shows undernourishment fell to 7.6 percent.","source_id":"m04","document_id":"D02","label":[[7,59,"DATASET"]],"Comments":[]}
+{"id":5,"text":"Targets are set against the Prevalence of undernourishment (FS_UNDERNOURISH_PCT) indicator.","source_id":"m05","document_id":"D02","label":[[28,80,"DATASET"]],"Comments":[]}
+{"id":6,"text":"According to the Labour Force Survey unemployment fell to 6.1 percent in the second quarter.","source_id":"m06","document_id":"D03","label":[[17,36,"DATASET"]],"Comments":[]}
+{"id":7,"text":"The labour survey also shows a rise in informal employment.","source_id":"m07","document_id":"D03","label":[[0,17,"DATASET"]],"Comments":[]}
+{"id":8,"text":"We combine the Household Budget Survey (HBS) 2021 with anthropometric data.","source_id":"m08","document_id":"D04","label":[[15,49,"DATASET"]],"Comments":[]}
+{"id":9,"text":"Anthropometric measures come from the Demographic and Health Survey 2016.","source_id":"m09","document_id":"D04","label":[[38,72,"DATASET"]],"Comments":[]}
+{"id":10,"text":"Sampling weights follow the Population and Housing Census 2014 frame.","source_id":"m10","document_id":"D04","label":[[28,62,"DATASET"]],"Comments":[]}
+{"id":11,"text":"The unemployment rate from the LFS stood at 6.3 percent at the start of the year.","source_id":"m11","document_id":"D05","label":[[4,34,"DATASET"]],"Comments":[]}
+{"id":12,"text":"Regional comparisons draw on the World Development Indicators.","source_id":"m12","document_id":"D06","label":[[33,61,"DATASET"]],"Comments":[]}
+{"id":13,"text":"Each country publishes a food security report with its own methodology.","source_id":"m13","document_id":"D06","label":[],"Comments":[]}
+{"id":14,"text":"The outlook covers twelve countries in the region.","source_id":"m14","document_id":"D06","label":[],"Comments":[]}

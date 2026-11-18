@@ -42,17 +42,18 @@ JSON. No detection model or metadata extraction is required.
 | **AI-native** | Model suggestions could be reviewed with their provenance and verification retained. That optional extension is outside this pass. |
 
 :::info[Running example]
-The fictional National Statistics Office labels the two-page labour market
-report, `EX-REP-2025-02.pdf`. PDF page 1 contains Figure 1, and PDF page 2
-contains Table 1. The unemployment values come from the shared fictional
-Labour Force Survey case. The separate teaching responses do not estimate them.
+This exercise reuses the Data Snapshot cookbook's sample publication,
+*From Stateless to Citizens: The Journey of Shona in Kenya*. The PDF has
+12 pages. PDF page 4 contains Figure 1 on labor-force status and Table 1 on
+demographic characteristics. The exercise labels those two regions while
+keeping the full document together in one task.
 :::
 
 ## Recipes
 
 <Recipe title="1.1 Create a multipage PDF project" level="Foundational" skills="Developer or data curator comfortable with a terminal" time="Thirty minutes, plus dependency download time">
 
-**Result:** Label Studio contains one task for the example PDF, with both page images available for annotation.
+**Result:** Label Studio contains one task for the example PDF, with all 12 page images available for annotation.
 
 The setup script accepts a directory of PDFs, renders every page at 300 dots
 per inch, and creates the project through the tool's API. An API is the
@@ -70,10 +71,15 @@ the script. A container installation needs the corresponding mounted paths.
    [multipage-labels.xml](pathname:///cookbook-files/open-source-data-annotation/multipage-labels.xml),
    and [LICENSE.txt](pathname:///cookbook-files/open-source-data-annotation/LICENSE.txt)
    into one working directory. Keep the XML beside the script because it
-   defines the labeling interface. Download
-   [EX-REP-2025-02.pdf](pathname:///cookbook-files/open-source-data-annotation/EX-REP-2025-02.pdf)
-   into a new `pdf-input/` subdirectory. That directory should contain only
-   this PDF for the worked example.
+   defines the labeling interface. Obtain the PDF from the
+   [ReliefWeb publication page](https://reliefweb.int/report/kenya/policy-brief-stateless-citizens-journey-shona-community-kenya)
+   or its [PDF attachment](https://reliefweb.int/attachments/831aca28-6777-4cb9-9b84-8976c63061fb/Policy%20Brief%20on%20Shona%20community_From%20Stateless%20to%20Citizens.pdf).
+   Save it in a new `pdf-input/` subdirectory as
+   `policy_brief_on_shona_community_from_stateless_to_citizens.pdf`.
+   Confirm that it has 12 pages and that PDF page 4 contains Figure 1 and
+   Table 1. That directory should contain only this PDF for the worked
+   example. The cookbook links to the publication and does not redistribute
+   the full PDF.
 2. Install the tool and the two libraries used by the script. The separate
    `ls-state` directory holds the database, while `ls-media` holds served
    page images. This separation limits the directory exposed as local media.
@@ -112,11 +118,11 @@ so that existing images and task files are preserved.
 source .venv-labelstudio/bin/activate
 read -rsp "Label Studio legacy token: " LABEL_STUDIO_API_KEY
 export LABEL_STUDIO_API_KEY
-python create_pdf_project.py --input-dir pdf-input --data-root "$PWD/ls-media" --batch lfs-q2 --title "Labour market report 2025 Q2"
+python create_pdf_project.py --input-dir pdf-input --data-root "$PWD/ls-media" --batch shona --title "Shona policy brief"
 ```
 
 5. Follow the project address printed by the script. Open its task and confirm
-   that both pages load in order. A broken image usually indicates a mismatch
+   that all 12 pages load in order. A broken image usually indicates a mismatch
    between the server's media root and `--data-root`. The local-storage entry
    supports media access; no storage synchronization is needed after task import.
 
@@ -139,22 +145,21 @@ The complete standalone implementation is available for inspection here.
 ```python file=../../website/static/cookbook-files/open-source-data-annotation/create_pdf_project.py
 ```
 
-**Worked example.** The Python 3.10 service check on November 12, 2026 used
-the supplied two-page PDF and printed the following output:
+**Worked example.** The Python 3.10 service check on November 18, 2026 used
+the full 12-page policy brief and printed the following output:
 
 ```text
-Created project 2: 1 PDF task(s).
-Rendered 2 page(s).
-Tasks: /tmp/annotation-labelstudio-media/documented/tasks.json
-Open http://127.0.0.1:18080/projects/2/data
+Created project 1: 1 PDF task(s).
+Rendered 12 page(s).
+Tasks: /tmp/annotation-reuse-pdf-check/media/verified-shona/tasks.json
+Open http://127.0.0.1:18081/projects/1/data
 ```
 
-Project ID `2`, the absolute `/tmp/` path, and port `18080` belong to that
-temporary verification installation. Each installation prints its own project
-ID, output path, and server address. The command above uses port `8080` and
-batch `lfs-q2`, so its path and URL will differ. The check is one PDF task,
-two rendered pages, and a project address that opens both pages in the browser.
-The first page shows Figure 1 and the second shows Table 1.
+Project ID `1`, the absolute `/tmp/` path, and port `18081` belong to that
+temporary verification installation. Each installation prints its own ID,
+path, and project address. The command above uses port `8080` and batch
+`shona`. Confirm one PDF task and 12 rendered pages, then open PDF page 4
+to find both annotation targets.
 
 The same command processes
 multiple PDFs when they are placed in the input directory. Batches of about
@@ -168,7 +173,7 @@ batch before retrying; the script does not delete partial work automatically.
 
 </Recipe>
 
-<Recipe title="1.2 Submit reviewed figure and table boxes" level="Foundational" skills="Data curator or document annotator" time="Twenty minutes for the two-page example">
+<Recipe title="1.2 Submit reviewed figure and table boxes" level="Foundational" skills="Data curator or document annotator" time="Twenty minutes for the two regions on PDF page 4">
 
 **Result:** The document task contains submitted rectangles labeled Figure and Table.
 
@@ -182,29 +187,31 @@ cells, source, and note. The report header, page number, and surrounding
 research prose stay outside. A photograph or a paragraph is not a figure
 under this chapter's analytical labeling policy.
 
-1. Open the document task and inspect both pages before labeling. Select
-   `Figure` and draw one rectangle around Figure 1 on the first page.
-2. Resize an edge to include the provisional-value note. To practice
+1. Open the document task, inspect its pages, and navigate to PDF page 4.
+   Select `Figure` and draw one rectangle around Figure 1, including its
+   title, axes, legend, and source line.
+2. Resize an edge to include the source line beneath the chart. To practice
    correction, draw a temporary extra rectangle on nearby prose, select it,
-   and delete it. The final task should retain only the intended figure box
-   on that page.
-3. Move to the second page, select `Table`, and enclose Table 1 with its
-   title, unit, source, and note. If a box has the wrong label, select the
-   box and change the label before submission. Rectangle rotation is
+   and delete it. The intended figure box should remain.
+3. On the same page, select `Table` and enclose Table 1 with its title,
+   headings, cells, and source line. If a box has the wrong label, select
+   the box and change the label before submission. Rectangle rotation is
    disabled in the supplied configuration.
-4. Revisit both pages, then click **Submit**. After editing a submitted task,
+4. Revisit both regions on PDF page 4, then click **Submit**. After editing a submitted task,
    use the tool's update action to save the revision. Confirm that the task
    is recorded as annotated. Closing a task with an unfinished draft does
    not establish that the intended annotations were submitted.
 
-**Worked example.** The intended final annotation has one `Figure` on PDF
-page 1 and one `Table` on PDF page 2. The chart's note and the table's note
-both state that 2025-Q2 is provisional. The actual rectangle coordinates
-depend on the boundaries drawn. No exact pixel match is required.
+**Worked example.** The intended final annotation has one `Figure` and one
+`Table`, both on PDF page 4. The figure box includes the labor-force chart's
+caption and source, and the table box includes the demographic table's
+caption and source. The actual rectangle coordinates depend on the
+boundaries drawn. No exact pixel match is required.
 
 **What this does not do.** Two submitted rectangles do not establish agreement
-between annotators or completeness on other documents. Pages with no target
-objects should still be inspected as part of the document task. This guide
+between annotators or completeness on the source document. This exercise
+labels only the two selected regions on PDF page 4; a full-document project
+would need to inspect and label other relevant regions too. This guide
 uses Label Studio's normal submission behavior and adds no page-completion system.
 
 </Recipe>
@@ -239,11 +246,12 @@ submitted annotations and should not be silently treated as reviewed labels.
 | `value.width` / `value.height` | These values give the rectangle size in the same percentage units. |
 | `value.rotation` | This value records rectangle rotation, which this workflow keeps at zero. |
 
-**Worked example.** The intended export associates `Figure` with page index
-0 and `Table` with page index 1. The captured
-[native service export](pathname:///cookbook-files/open-source-data-annotation/labelstudio-export.json)
-contains this association after API-entered annotation and correction. It
-does not document human browser drawing. As a representation example, an unrotated
+**Worked example.** The intended export associates both `Figure` and
+`Table` with page index 3, the fourth entry in `data.pages`. The native
+[service export](pathname:///cookbook-files/open-source-data-annotation/labelstudio-export.json)
+is described in the [verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md),
+which distinguishes API-entered labels from human browser review.
+As a representation example, an unrotated
 rectangle with `x=10`, `y=20`, `width=30`, and `height=40` has normalized XYXY
 corners `[0.1, 0.2, 0.4, 0.6]`. This arithmetic example is not a claim about
 the rectangle drawn in the UI. Normalized XYXY uses two corners as fractions
@@ -301,7 +309,7 @@ for the actual downstream task before conversion is implemented.
 ## Verification
 
 - Confirm that one input PDF creates one task containing two ordered page images.
-- Confirm that the submitted results contain a Figure on page index 0 and a Table on page index 1.
+- Confirm that the submitted results contain a Figure and a Table, both on page index 3.
 - Compare each exported rectangle with its displayed page and check its label and percentage units.
 - Complete the [manual testing checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md), including corrections and submission after reopening the task.
 

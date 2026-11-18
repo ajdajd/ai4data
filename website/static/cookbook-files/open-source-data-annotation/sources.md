@@ -1,19 +1,42 @@
 # Example sources and licensing
 
-The report, research-style passages, and occupation responses were created
-as fictional teaching materials. They contain no real respondent data.
-The six responses do not estimate national indicators.
+The PDF exercise uses a real institutional publication. The sentence sample,
+supplemental Unicode passages, and occupation responses are fictional teaching
+materials and contain no real respondent data. The text examples do not
+estimate the policy brief's statistics.
 
-## Example facts and original materials
+## Reused publication and teaching materials
 
-The organization, report EX-REP-2025-02, survey EX-LFS-2025-Q2, dataset names,
-and unemployment values come from AI4Data's shared `facts.json`:
-https://github.com/worldbank/ai4data/blob/main/website/static/cookbook-files/_example/facts.json
+Chapter 1 reuses *From Stateless to Citizens: The Journey of Shona in Kenya*,
+the 12-page policy brief used in the Data Snapshot cookbook. Figure 1 and
+Table 1 appear on PDF page 4. Readers obtain the PDF from its publication
+page or attachment:
 
-The two-page PDF and its chart/table are original assets built with
-`build_example.py`. Rebuilding requires the shared facts file, not a model.
-The passages are original fictional prose. The decomposed accent in passage
-p07 and its leading emoji are intentional offset-check inputs.
+https://reliefweb.int/report/kenya/policy-brief-stateless-citizens-journey-shona-community-kenya
+
+https://reliefweb.int/attachments/831aca28-6777-4cb9-9b84-8976c63061fb/Policy%20Brief%20on%20Shona%20community_From%20Stateless%20to%20Citizens.pdf
+
+The full PDF is not redistributed with this cookbook. The publication retains
+its source attribution and applicable terms; the repository's license does
+not grant rights to the source publication. Verification used an existing
+local copy, not a newly downloaded or altered publication.
+
+Chapter 2 reuses all 14 sentences from the Monitoring of Data Use cookbook's
+`labelled_sample.csv`:
+https://github.com/worldbank/ai4data/blob/main/website/static/cookbook-files/monitoring-data-use/labelled_sample.csv
+
+The doccano input keeps every sentence and original document identifier
+unchanged. It adds source_id values m01–m14 in CSV row order and empty label
+lists, omitting mention_text answers and notes. The source sample defines
+12 mentions and two negative sentences. Its broad data-source policy includes
+indicator series and a specific report cited as a source. The reference
+phrase "the labour survey" in row 7 is lowercase in the CSV's mention_text,
+while its sentence starts "The labour survey". Annotation offsets preserve
+the sentence's original capital T.
+
+The separate unicode-passages.jsonl retains the earlier composed-accent and
+emoji/combining-accent/newline cases p06 and p07. These are constructed
+verification inputs, not additional sentences from the Data Use sample.
 
 The response texts and source IDs are selected from the existing fictional
 AI4Data occupation-coding example. Its reference codes, model suggestions,
@@ -46,11 +69,19 @@ and any reproduction of official reference material retain the ILO's terms.
 
 ## Native service exports
 
-`labelstudio-export.json`, `entities-export.jsonl`, and `codes-export.jsonl`
-were produced by actual local annotation services on November 12, 2026.
+`labelstudio-export.json`, `entities-export.jsonl`, and `unicode-export.jsonl`
+were captured from fresh local Label Studio 1.22.0 and doccano 1.8.4 projects
+during the input reuse checks on November 18, 2026. The PDF export contains
+one 12-page task with Figure and Table results on page index 3. The main
+entity export contains 14 records and 12 spans. The Unicode export contains
+two records and two spans. The occupation file codes-export.jsonl remains the
+native export captured on November 12, 2026.
+
 The teaching labels were entered programmatically through the services' APIs
-and exported using their native exporters. These files demonstrate persisted
-representations, not human annotation quality or a completed browser test.
+and exported using their native exporters. JSONL bytes were extracted from
+the export archives without rewriting the records. These files demonstrate
+persisted representations, not human annotation quality or a completed
+browser test.
 
 The exports retain native internal IDs and local media paths. Those IDs can
 change in another installation, and the media paths refer to the temporary
@@ -70,6 +101,6 @@ https://github.com/doccano/doccano/blob/v1.8.4/LICENSE
 PyMuPDF is available under AGPL or commercial terms:
 https://pymupdf.readthedocs.io/en/latest/about.html#license-and-copyright
 
-These software licenses are separate from the fictional example assets.
+These software licenses are separate from the teaching assets and source publication.
 The cookbook does not redistribute annotation-tool packages, model weights,
 third-party publication pages, or official classification manuals.

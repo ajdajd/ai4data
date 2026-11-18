@@ -1,7 +1,7 @@
 # Manual workflow checks and Pass 2 handoff
 
-Use new local state and fresh output names. These checks concern the supplied
-fictional data. Preserve existing projects and state when testing a new batch.
+Use new local state and fresh output names. These checks concern the published policy brief and supplied
+teaching text. Preserve existing projects and state when testing a new batch.
 Record the application version, platform, date, and actual observations.
 Service/API execution evidence is recorded separately in `verification.md`.
 
@@ -10,15 +10,17 @@ Service/API execution evidence is recorded separately in `verification.md`.
 1. Follow recipe 1.1 in a clean Python 3.10 environment. Start Label Studio
    1.22.0, create an account, and enable legacy tokens in the organization
    settings if needed. Confirm the token is not written into downloaded files.
-2. Place only EX-REP-2025-02.pdf in pdf-input. Run create_pdf_project.py with
-   the configured media root and a fresh batch name. Confirm one task has two
-   pages, with the chart first and the table second.
-3. Open both images in the browser. Draw Figure around the chart, its title,
-   unit, source, and note. Resize one boundary. Add a temporary box over prose
-   and delete it. Confirm that only the intended Figure remains on page 1.
-4. On page 2, draw Table around the title, unit, headings, cells, source, and
-   note. Change an intentionally wrong label to Table. Confirm there is one
-   Figure and one Table, associated with the correct images.
+2. Obtain the Shona policy brief from its publisher, as in recipe 1.1. Place
+   only policy_brief_on_shona_community_from_stateless_to_citizens.pdf in
+   pdf-input. Run create_pdf_project.py with the configured media root and
+   a fresh batch name. Confirm one task has 12 pages in source order.
+3. Inspect the page images and navigate to PDF page 4. Draw Figure around
+   Figure 1, including its title, axes, legend, and source line. Resize one
+   boundary. Add a temporary box over prose and delete it.
+4. On the same page, draw Table around Table 1, including its title, headings,
+   cells, and source line. Change an intentionally wrong label to Table.
+   Confirm one Figure and one Table, both on page index 3. The exercise covers
+   only these two selected regions, not all targets in the publication.
 5. Submit the document task, reopen it, make a small correction, and save the
    update. Check the difference between an unfinished draft and submitted work.
 6. Export native JSON. Inspect data.pages, meta.source_file, annotations,
@@ -34,21 +36,33 @@ Service/API execution evidence is recorded separately in `verification.md`.
    the web application and task worker, and create a Sequence Labeling project.
    Disable overlapping spans, relations, and grapheme mode.
 2. Create DATASET. Import passages.jsonl with text/label column names.
-   Confirm seven records and no import errors. Check preserved source_id metadata.
-3. Select the full dataset names and the two LFS acronyms in p02. Deliberately
-   select an overlong span, delete it, and label the correct words. Confirm p05
-   as inspected without creating an entity.
-4. Inspect p06 with its composed accent. Inspect p07 with its leading emoji,
-   decomposed combining accent, and newline. Select exactly Labour Force Survey
-   in each, save, reopen, and check the highlighted words.
-5. Export native JSONL, extract the annotator's file, and run:
+   Confirm 14 records and no import errors. Check preserved source_id values
+   m01–m14 and original document_id values D01–D06.
+3. Apply the reused sample's broad data-source policy. Select Household
+   Budget Survey 2021 in m01, HBS in m02, and the entire Household Budget
+   Survey (HBS) 2021 phrase in m08. Include the specific report cited as a
+   source in m04 and the descriptive reference The labour survey in m07.
+   Deliberately select an overlong span, delete it, and select the correct
+   words. Confirm m13 and m14 as reviewed without creating entities.
+4. Save and confirm every record, reopen it, and check the highlighted words.
+   Export native JSONL, extract the annotator's file, and run:
 
    python inspect_doccano.py entities entities-export.jsonl --source passages.jsonl
 
-6. Verify the same seven source IDs, unchanged strings, and the intended eight
-   spans. Specifically compare Python text[start:end] with the browser highlights
-   for p06 and p07. If they differ, preserve the evidence and do not normalize or
-   shift offsets by guesswork. Record that installation's offset limitation.
+5. Verify the same 14 source IDs, unchanged strings, 12 intended spans, and
+   two empty label lists. The original CSV reference spells row 7's mention
+   with a lowercase t; preserve the sentence's capital T in the annotation.
+6. For optional Unicode verification, create a separate project with the same
+   settings and import unicode-passages.jsonl. Confirm two records, p06 and
+   p07. They contain a composed accent and a leading emoji, combining accent,
+   and newline. Select exactly Labour Force Survey in each, save, reopen,
+   and export as unicode-export.jsonl. Run:
+
+   python inspect_doccano.py entities unicode-export.jsonl --source unicode-passages.jsonl
+
+7. Compare Python text[start:end] with browser highlights in both Unicode
+   cases. If they differ, preserve the evidence and do not normalize or shift
+   offsets by guesswork. Record that installation's offset limitation.
 
 ## Doccano occupation coding
 
@@ -72,10 +86,9 @@ Service/API execution evidence is recorded separately in `verification.md`.
 
 Review the three chapters independently. Confirm that each first recipe
 contains its own setup and that none depends on a different task chapter.
-Verify every download and embedded script. Hidden production builds remove
-this cookbook's downloadable directory, so use a local development preview
-or repository files for the complete review. Hidden pages should remain out
-of landing cards, search, and the sitemap until editorial approval.
+Verify every download and embedded script. Confirm that the cookbook appears
+on the landing page and that its downloadable files are available in the
+production build. The working draft retains the site's normal noindex status.
 
 ## Pass 2 extension points
 

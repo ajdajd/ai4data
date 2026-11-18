@@ -11,7 +11,7 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 # 3. Text classification and statistical coding
 
-**Question:** How can open-ended occupation responses become consistent reviewed categories?
+**Question:** How can free-text responses be classified and reviewed using a defined set of categories?
 
 ## Rationale
 
@@ -42,10 +42,9 @@ chapter or model-assisted coding system.
 | **AI-native** | Reference labels could support verified automated coding with human oversight. That downstream process is outside this chapter. |
 
 :::info[Running example]
-The fictional National Statistics Office codes six teaching responses in the
-context of `EX-LFS-2025-Q2`, the Labour Force Survey's second-quarter round.
-The responses illustrate coding decisions. They are not a representative
-sample and do not produce the shared example's national unemployment rate.
+The exercise uses six fictional survey responses to practice assigning
+occupation categories and flagging cases with insufficient detail. The
+responses were created for teaching and contain no real respondent data.
 :::
 
 ## Recipes
@@ -60,8 +59,10 @@ label for cases that cannot be assigned within this exercise. The input
 records intentionally omit reference codes and model suggestions.
 
 The local installation uses Python 3.10 and doccano 1.8.4 with the supplied
-compatibility requirements. It needs both a web application and an import/export
-worker. These instructions are complete for a reader arriving directly at
+compatibility requirements. The commands use uv to apply the supplied pins
+as explicit dependency overrides, as documented in the
+[verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md).
+It needs both a web application and an import/export worker. These instructions are complete for a reader arriving directly at
 this chapter. A working existing installation can be reused with a new project.
 
 1. Download [responses.jsonl](pathname:///cookbook-files/open-source-data-annotation/responses.jsonl),
@@ -93,7 +94,8 @@ The following commands create the account and start the web application.
 ```shell
 python3.10 -m venv .venv-doccano
 source .venv-doccano/bin/activate
-python -m pip install -r requirements-doccano.txt
+python -m pip install uv
+uv pip install --python python -r requirements-doccano.txt --override requirements-doccano.txt
 export DOCCANO_HOME="$PWD/doccano-codes-state"
 doccano init
 read -rsp "Local annotator password: " DOCCANO_PASSWORD

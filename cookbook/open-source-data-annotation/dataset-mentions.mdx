@@ -41,17 +41,19 @@ it does not require a model or the other chapters.
 | **AI-native** | A model could propose spans for human correction with provenance retained. This extension is reserved for Pass 2. |
 
 :::info[Running example]
-The fictional National Statistics Office prepares seven research-style
-passages in the context of its labour market report, `EX-REP-2025-02`.
-The passages mention the Labour Force Survey and related example datasets.
-One contains no dataset mention, and two exercise Unicode text handling.
+The exercise reuses all 14 sentences from the
+[Monitoring of Data Use sample](pathname:///cookbook-files/monitoring-data-use/labelled_sample.csv).
+They are fictional teaching text. Twelve sentences contain a reference
+mention and two are negative examples. The doccano input preserves each
+sentence and its original document identifier. Two additional Unicode
+passages are supplied separately for optional verification.
 :::
 
 ## Recipes
 
 <Recipe title="2.1 Set up a dataset-mention project" level="Foundational" skills="Data practitioner comfortable with a terminal and a browser" time="Thirty minutes, plus dependency download time">
 
-**Result:** Doccano contains a sequence-labeling project with seven unchanged passages and one DATASET label.
+**Result:** Doccano contains a sequence-labeling project with 14 unchanged sentences and one DATASET label.
 
 Doccano runs a web application and a task worker. The worker handles imports
 and exports, so a working login page alone does not establish a complete
@@ -60,7 +62,8 @@ dependencies separate from other Python projects.
 
 The example uses doccano 1.8.4 with Python 3.10. The downloadable requirements
 include compatibility bounds for dependencies that have changed since that
-release. The [verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
+release. The commands use uv to apply those bounds as explicit dependency
+overrides. The [verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
 states what was executed. The commands use a Linux or macOS shell;
 the [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/)
 covers other supported setups.
@@ -74,11 +77,14 @@ covers other supported setups.
 | Field | Meaning |
 |---|---|
 | `source_id` | This stable identifier distinguishes a passage, even when passages repeat a dataset name. |
-| `document_id` | This field connects the passage to the fictional report. |
+| `document_id` | This field preserves the source sample's document identifier, D01–D06. |
 | `text` | This exact text is displayed and labeled. |
 | `label` | The empty list supplies the native annotation field without revealing any answers. |
 
-The input passages contain no reference labels to reveal during annotation.
+The JSONL file adapts the existing CSV for doccano: `sentence` becomes
+`text`, `document_id` is preserved, and `m01`–`m14` identify the source rows
+in order. The CSV's `mention_text` answers and notes are omitted, and `label`
+is an empty list. The sentence text is unchanged.
 
 ```json file=../../website/static/cookbook-files/open-source-data-annotation/passages.jsonl
 ```
@@ -93,7 +99,8 @@ keeps its state in the working directory.
 ```shell
 python3.10 -m venv .venv-doccano
 source .venv-doccano/bin/activate
-python -m pip install -r requirements-doccano.txt
+python -m pip install uv
+uv pip install --python python -r requirements-doccano.txt --override requirements-doccano.txt
 export DOCCANO_HOME="$PWD/doccano-entities-state"
 doccano init
 read -rsp "Local annotator password: " DOCCANO_PASSWORD
@@ -113,21 +120,21 @@ doccano task --concurrency 1
 ```
 
 4. Open `http://127.0.0.1:8000` and sign in. Create a **Sequence Labeling**
-   project named `Labour report dataset mentions`. Disable overlapping
+   project named `Data Use sentence annotation`. Disable overlapping
    entities, grapheme mode, and relation annotation for this exercise. These
    settings keep the export compatible with the simple span check in
    Recipe 2.3. In **Labels**, add
    the exact label `DATASET`.
 5. In **Dataset**, use **Actions → Import Dataset** and select JSONL. Set the
    text column to `text` and the label column to `label`. The unlabeled input
-   supplies `label: []` for each record. Confirm that seven records import without errors and that
+   supplies `label: []` for each record. Confirm that 14 records import without errors and that
    `source_id` is retained as record metadata. Do not substitute the tool's
    internal numeric record ID for this source identifier.
 
-**Worked example.** Record `p01` contains “We used the Labour Force Survey to
-describe employment.” Record `p05` discusses methods without identifying a
-dataset. Both belong in the project, because a reviewed negative example is
-different from a passage that was never inspected.
+**Worked example.** Record `m01` contains “We use the Household Budget
+Survey 2021 to estimate consumption per adult equivalent.” Record `m14`
+contains “The outlook covers twelve countries in the region.” Both records
+need review, including the negative example.
 
 **What this does not do.** This local setup does not configure a shared
 production service, OCR, or PDF text extraction. The passages are prepared
@@ -139,35 +146,37 @@ inputs. The application must not transform them after span positions are set.
 
 **Result:** Each passage has reviewed entity labels or an explicit review decision that no dataset is mentioned.
 
-The introductory `DATASET` label means a named data source, its explicit
-acronym, or an identifiable dataset description. Mark only the referring
-words. Exclude surrounding punctuation, grammatical context, and unrelated
-report titles. Generic mentions such as “survey methods” do not identify a
-dataset in this exercise.
+The `DATASET` label follows the existing Data Use sample's broad policy:
+it marks a specific data source referred to by a name, acronym, or identifiable
+description. This includes a survey, census, indicator series, or a specific
+report cited as a source of data. Mark the referring phrase supplied by the
+sample's reference interpretation. A generic phrase such as “a food security
+report” does not identify a specific source.
 
-This policy is a teaching simplification. The current AI4Data extraction
-implementation distinguishes named, descriptive, and vague data references.
-Those categories do not mean that every model-detected phrase should be
-accepted as a valid annotation under this policy.
+A span policy must state whether qualifiers and acronyms belong in one
+selection. Here, `Household Budget Survey (HBS) 2021` is one span, matching
+the reused sample. This is a teaching policy; each project must define its
+own boundaries. The current AI4Data extraction implementation also
+distinguishes named, descriptive, and vague references; this introductory
+exercise uses only one label.
 
-1. Open the annotation screen and select `Labour Force Survey` in `p01`.
+1. Open `m01` and select `Household Budget Survey 2021`.
    Apply `DATASET`, excluding the preceding “the” and the following context.
-2. In `p02`, label the full survey name and both occurrences of `LFS`
-   separately. An acronym inside parentheses is its own span; the parentheses
-   themselves stay outside the selection.
-3. Label `Household Budget Survey 2021` in `p03` and `Population and Housing
-   Census 2014` in `p04`. Leave `p05` without an entity. Use the tool's
-   completion/confirmation action after inspecting each passage, including
-   that negative example.
+2. In `m02`, label `HBS`. In `m08`, select the entire phrase
+   `Household Budget Survey (HBS) 2021` as one span.
+3. Review the remaining specific references in `m03`–`m12`. The sample includes
+   the descriptive phrase `The labour survey` in `m07` and a report cited as
+   a data source in `m04`. Leave `m13` and `m14` without an entity. Use the
+   tool's completion/confirmation action after inspecting every sentence,
+   including both negative examples.
 4. Practice correction by selecting an overlong span, deleting its label,
-   and selecting the intended words again. Label the survey mentions in
-   `p06` and `p07` without editing the passages. Reopen the records and
-   confirm that the corrected selections remain saved.
+   and selecting the intended words again. Reopen the record and confirm
+   that the corrected selection remains saved.
 
-**Worked example.** The intended selection in `p01` is `Labour Force Survey`.
-It begins at character position 12 and ends just before position 31.
-The planned reference interpretation has eight mentions across seven
-passages. That count expresses the stated labeling policy; a structural
+**Worked example.** The intended selection in `m01` is
+`Household Budget Survey 2021`. It begins at character position 11 and ends
+just before position 39. The reused reference sample has 12 mentions across
+14 sentences. That count expresses the stated labeling policy; a structural
 validator cannot establish that the semantic decisions are correct.
 
 **What this does not do.** This exercise does not resolve every descriptive
@@ -182,8 +191,8 @@ different positions remain separate mentions.
 **Result:** A native doccano JSONL export preserves the original passages and reconstructs every selected mention.
 
 An offset is a character position in the text that was imported. The start
-position is included and the end position is excluded. Thus `text[12:31]`
-selects the nineteen characters of `Labour Force Survey` in `p01`.
+position is included and the end position is excluded. Thus `text[11:39]`
+selects `Household Budget Survey 2021` in `m01`.
 These positions are not UTF-8 byte counts.
 
 The validator compares every exported passage with its original source before
@@ -201,8 +210,8 @@ checks are described in this chapter's Verification section.
    installed release before interpreting these fields.
 3. Run the check below from the directory containing the original passages,
    export, and downloaded script. Review the displayed text against the
-   annotation policy. Use the additional verification checks below for the
-   character-handling examples in `p06` and `p07`.
+   annotation policy. Use the separate Unicode inputs described in Verification
+   for additional character-handling checks.
 
 The command reads both files without modifying them. It rejects changed text,
 missing or duplicate source identifiers, invalid offsets, unknown labels, and
@@ -219,15 +228,19 @@ were entered through the API, so this check demonstrates persistence and
 representation. Human browser review remains a separate check.
 
 ```text
-p01 [12:31] 'Labour Force Survey'
-p02 [4:23] 'Labour Force Survey'
-p02 [25:28] 'LFS'
-p02 [55:58] 'LFS'
-p03 [4:32] 'Household Budget Survey 2021'
-p04 [4:38] 'Population and Housing Census 2014'
-p06 [16:35] 'Labour Force Survey'
-p07 [15:34] 'Labour Force Survey'
-PASS: 7 unchanged record(s); 8 span(s).
+m01 [11:39] 'Household Budget Survey 2021'
+m02 [4:7] 'HBS'
+m03 [47:84] 'prevalence of undernourishment series'
+m04 [7:59] 'National Statistics Office food security report 2025'
+m05 [28:80] 'Prevalence of undernourishment (FS_UNDERNOURISH_PCT)'
+m06 [17:36] 'Labour Force Survey'
+m07 [0:17] 'The labour survey'
+m08 [15:49] 'Household Budget Survey (HBS) 2021'
+m09 [38:72] 'Demographic and Health Survey 2016'
+m10 [28:62] 'Population and Housing Census 2014'
+m11 [4:34] 'unemployment rate from the LFS'
+m12 [33:61] 'World Development Indicators'
+PASS: 14 unchanged record(s); 12 span(s).
 ```
 
 The focused validator uses only the Python standard library and retains the
@@ -236,9 +249,9 @@ tool's native representation.
 ```python file=../../website/static/cookbook-files/open-source-data-annotation/inspect_doccano.py
 ```
 
-**Worked example.** A native label triple `[12, 31, "DATASET"]` for `p01`
-reconstructs `Labour Force Survey`. A complete export should contain the same
-seven source identifiers, including `p05` with no entity labels. The
+**Worked example.** A native label triple `[11, 39, "DATASET"]` for `m01`
+reconstructs `Household Budget Survey 2021`. A complete export should contain
+the same 14 source identifiers, including `m13` and `m14` with no entity labels. The
 [verification record](pathname:///cookbook-files/open-source-data-annotation/verification.md)
 separates executed service checks from browser actions still requiring review.
 
@@ -277,7 +290,7 @@ quality. Relation-enabled exports are outside this introductory format.
 
 ## Verification
 
-- Confirm that all seven source records survive import and export with unchanged text.
+- Confirm that all 14 source records survive import and export with unchanged text.
 - Read the reconstructed spans and compare them with the labeling rules.
 - Check a reviewed negative separately from an unfinished record in the UI.
 - Complete the [Unicode and browser checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md) before treating arbitrary Unicode offset behavior as verified.
@@ -288,11 +301,21 @@ Grapheme mode groups displayed characters differently, which is why it remains
 disabled in the example project. Changing whitespace, line endings, accents,
 or Unicode normalization after labeling can move offsets.
 
-The `p06` and `p07` passages preserve composed and combining accents, a leading
-emoji, and a newline so that these cases can be checked explicitly. Backend
-persistence was verified, but browser selection still needs the manual
-round-trip check. Compare the browser's highlighted words with `text[start:end]`
-without changing or normalizing the source text.
+The optional [unicode-passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/unicode-passages.jsonl)
+contains the earlier teaching cases `p06` and `p07`. They preserve composed
+and combining accents, a leading emoji, and a newline. Import these two
+records into a separate sequence-labeling project with the same settings.
+Label exactly `Labour Force Survey` in each, confirm both records, and export
+as `unicode-export.jsonl`. Then run:
+
+```bash
+python inspect_doccano.py entities unicode-export.jsonl --source unicode-passages.jsonl
+```
+
+The [Unicode export fixture](pathname:///cookbook-files/open-source-data-annotation/unicode-export.jsonl)
+is recorded separately from the 14-sentence sample. Browser selection still
+needs the manual round-trip check. Compare the browser's highlighted words
+with `text[start:end]` without changing or normalizing the source text.
 
 ## Checklist
 

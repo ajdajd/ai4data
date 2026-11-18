@@ -1,7 +1,14 @@
-{"source_id": "p01", "document_id": "EX-REP-2025-02", "text": "We used the Labour Force Survey to describe employment.", "label": []}
-{"source_id": "p02", "document_id": "EX-REP-2025-02", "text": "The Labour Force Survey (LFS) supplies the indicators. LFS is cited again.", "label": []}
-{"source_id": "p03", "document_id": "EX-REP-2025-02", "text": "The Household Budget Survey 2021 provides a separate source on consumption.", "label": []}
-{"source_id": "p04", "document_id": "EX-REP-2025-02", "text": "The Population and Housing Census 2014 describes the population.", "label": []}
-{"source_id": "p05", "document_id": "EX-REP-2025-02", "text": "The authors discuss survey methods and a forthcoming report.", "label": []}
-{"source_id": "p06", "document_id": "EX-REP-2025-02", "text": "Café notes: the Labour Force Survey is cited here.", "label": []}
-{"source_id": "p07", "document_id": "EX-REP-2025-02", "text": "📊 Café notes: Labour Force Survey.\nThe same source is cited on this line.", "label": []}
+{"source_id": "m01", "document_id": "D01", "text": "We use the Household Budget Survey 2021 to estimate consumption per adult equivalent.", "label": []}
+{"source_id": "m02", "document_id": "D01", "text": "The HBS sample covers 6000 households in both urban and rural areas.", "label": []}
+{"source_id": "m03", "document_id": "D01", "text": "Our estimates are consistent with the official prevalence of undernourishment series.", "label": []}
+{"source_id": "m04", "document_id": "D02", "text": "As the National Statistics Office food security report 2025 shows undernourishment fell to 7.6 percent.", "label": []}
+{"source_id": "m05", "document_id": "D02", "text": "Targets are set against the Prevalence of undernourishment (FS_UNDERNOURISH_PCT) indicator.", "label": []}
+{"source_id": "m06", "document_id": "D03", "text": "According to the Labour Force Survey unemployment fell to 6.1 percent in the second quarter.", "label": []}
+{"source_id": "m07", "document_id": "D03", "text": "The labour survey also shows a rise in informal employment.", "label": []}
+{"source_id": "m08", "document_id": "D04", "text": "We combine the Household Budget Survey (HBS) 2021 with anthropometric data.", "label": []}
+{"source_id": "m09", "document_id": "D04", "text": "Anthropometric measures come from the Demographic and Health Survey 2016.", "label": []}
+{"source_id": "m10", "document_id": "D04", "text": "Sampling weights follow the Population and Housing Census 2014 frame.", "label": []}
+{"source_id": "m11", "document_id": "D05", "text": "The unemployment rate from the LFS stood at 6.3 percent at the start of the year.", "label": []}
+{"source_id": "m12", "document_id": "D06", "text": "Regional comparisons draw on the World Development Indicators.", "label": []}
+{"source_id": "m13", "document_id": "D06", "text": "Each country publishes a food security report with its own methodology.", "label": []}
+{"source_id": "m14", "document_id": "D06", "text": "The outlook covers twelve countries in the region.", "label": []}
