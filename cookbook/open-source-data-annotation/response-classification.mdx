@@ -58,11 +58,9 @@ small codebook contains four ISCO-08 unit groups and a separate workflow
 label for cases that cannot be assigned within this exercise. The input
 records intentionally omit reference codes and model suggestions.
 
-The local installation uses Python 3.10 and doccano 1.8.4 with the supplied
-compatibility requirements. The commands use uv to apply the supplied pins
-as explicit dependency overrides.
-It needs both a web application and an import/export worker. These instructions are complete for a reader arriving directly at
-this chapter. A working existing installation can be reused with a new project.
+Install doccano 1.8.4 with Python 3.10 and the supplied requirements file.
+The web application and import/export worker must both remain running
+while completing the exercise.
 
 1. Download [responses.jsonl](pathname:///cookbook-files/open-source-data-annotation/responses.jsonl),
    [occupation-codebook.csv](pathname:///cookbook-files/open-source-data-annotation/occupation-codebook.csv),
@@ -77,7 +75,7 @@ this chapter. A working existing installation can be reused with a new project.
 | `text` | This field contains the unchanged occupation description. |
 | `label` | The empty list is the native field for a response that has no assigned category yet. |
 
-The downloadable input is small enough to inspect before importing it.
+Inspect the input responses before importing them.
 
 ```json file=../../website/static/cookbook-files/open-source-data-annotation/responses.jsonl
 ```
@@ -205,10 +203,8 @@ codes, unknown categories, and empty or multiple labels.
 python inspect_doccano.py classification codes-export.jsonl --source responses.jsonl --codebook occupation-codebook.csv
 ```
 
-The captured [service fixture](pathname:///cookbook-files/open-source-data-annotation/codes-export.jsonl)
-produces the following result. Those teaching
-categories were entered through the API and exported by doccano; browser
-selection and correction remain separate manual checks.
+The supplied [example export](pathname:///cookbook-files/open-source-data-annotation/codes-export.jsonl)
+contains API-entered teaching labels and produces the following result.
 
 ```text
 r01 2341

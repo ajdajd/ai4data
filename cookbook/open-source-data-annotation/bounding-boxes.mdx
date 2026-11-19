@@ -56,15 +56,15 @@ keeping the full document together in one task.
 
 **Result:** Label Studio contains one task for the example PDF, with all 12 page images available for annotation.
 
-The setup script accepts a directory of PDFs, renders every page at 300 dots
-per inch, and creates the project through the tool's API. It uses a local token for that operation. It does not need a
-trained model or any existing environment.
+A Label Studio project contains the documents to annotate and the available
+labels. This recipe creates one task per PDF, with its pages displayed as
+images for labeling.
 
 The commands below use a Linux or macOS shell and Python 3.10 in a separate
 environment. Windows readers can use WSL or adapt environment activation using
 the [official installation guide](https://labelstud.io/guide/install).
 The local media root must be the same absolute directory in the server and
-the script. A container installation needs the corresponding mounted paths.
+the script.
 
 Steps 1–4 prepare the files, Python environment, and dependencies. Steps 5–9
 configure Label Studio and create the annotation project.
@@ -95,12 +95,9 @@ cd annotation-pdf
    `policy_brief_on_shona_community_from_stateless_to_citizens.pdf`.
    Confirm that it has 12 pages and that PDF page 4 contains Figure 1 and
    Table 1. That directory should contain only this PDF for the worked
-   example. The cookbook links to the publication and does not redistribute
-   the full PDF.
+   example.
 4. Create an isolated Python environment, activate it, and install Label
-   Studio and the libraries used by the recipe. PyMuPDF renders PDF pages,
-   requests communicates with the Label Studio API, and python-dotenv loads
-   the `.env` configuration.
+   Studio and the required packages.
 
 The commands below install Label Studio and the PDF setup dependencies.
 
@@ -130,21 +127,21 @@ EOF
 chmod 600 .env
 ```
 
-The command above writes absolute paths into `.env`. Start Label Studio
-with `dotenv run` to load these settings for the server process. Leave
-this terminal running. Exported variables take precedence over `.env` values.
+Start Label Studio and leave this terminal running.
 
 ```shell
 dotenv -f .env run --no-override -- label-studio start --port 8080 --internal-host 127.0.0.1 --no-browser --enable-legacy-api-token
 ```
 
-6. Open a second terminal in `annotation-pdf` and initialize a local account
-   with legacy tokens enabled. Enter an email address when prompted and set
+6. Open a second terminal in `annotation-pdf` and initialize a local account.
+   Enter an email address when prompted and set
    the account password at the initialization prompt. Use this account to
    sign in when opening the project in Step 9.
 
+These login details are only for the local Label Studio instance used for
+offline annotation.
+
 Activate the environment and create the account with the following commands.
-`dotenv run` supplies the same `.env` settings to the initialization command.
 
 ```shell
 source .venv-labelstudio/bin/activate
@@ -152,41 +149,35 @@ read -rp "Local account email: " LABEL_STUDIO_USERNAME
 dotenv -f .env run --no-override -- label-studio init --username "$LABEL_STUDIO_USERNAME" --enable-legacy-api-token
 ```
 
-Label Studio generates a legacy token when it creates the account. Run
-this command to display it:
+7. In the second terminal, retrieve the account's legacy API token and
+   save it in `.env`.
+
+Run the following command to display the token.
 
 ```shell
-dotenv -f .env run --no-override -- label-studio user --username "$LABEL_STUDIO_USERNAME"
+dotenv -f .env run --no-override -- \
+  label-studio user --username "$LABEL_STUDIO_USERNAME" \
+  | grep -o "'token': '[^']*'"
 ```
 
-The command prints an account record. Find the `token` field and copy the
-string inside its quotes. For example, the relevant part of the output
-has this form; `<legacy-token>` represents the generated token.
+The output has the following form. `<legacy-token>` represents
+the generated token; copy the value inside its quotes.
 
 ```text
 'token': '<legacy-token>'
 ```
 
-7. Edit `.env` in `annotation-pdf` and replace the empty value with the
-   copied token from Step 6. Keep the three configuration settings unchanged
-   and keep this terminal open for Step 8.
-
-After editing, the API-key line should look like this, with the placeholder
+Edit `.env` in `annotation-pdf` and replace the empty `LABEL_STUDIO_API_KEY`
+value with the copied token. After editing, the API-key line should look like this, with the placeholder
 replaced by the actual key.
 
 ```text
 LABEL_STUDIO_API_KEY="paste-your-legacy-token-here"
 ```
 
-Save `.env` before proceeding. The setup script loads it automatically from
-the working directory, so no shell-loading commands are needed.
+Save `.env` before proceeding.
 
-8. Run the setup script below. It checks authentication, renders the PDF
-   pages, writes `tasks.json`, creates the project, and imports one task per
-   PDF. Each line after the script name supplies one parameter.
-
-The parameters select the source PDFs, the media directory, a new batch
-folder, and the project's displayed name.
+8. Run the setup command below to create the project and import the PDF.
 
 ```shell
 python create_pdf_project.py \
@@ -204,10 +195,9 @@ python create_pdf_project.py \
 | `--title "Shona policy brief"` | This name appears in Label Studio's project list. |
 
 9. Follow the project address printed by the script and sign in with the
-   account from Step 6. Open its task and confirm
-   that all 12 pages load in order. A broken image usually indicates a mismatch
-   between the server's media root and `--data-root`. The local-storage entry
-   supports media access; no storage synchronization is needed after task import.
+   account from Step 6. Open its task and confirm that all 12 pages load in
+   order. If images do not load, check that the media directory in `.env`
+   matches `--data-root`.
 
 The task fields connect the source PDF to its images:
 
@@ -287,8 +277,7 @@ boundaries drawn. No exact pixel match is required.
 **What this does not do.** Two submitted rectangles do not establish agreement
 between annotators or completeness on the source document. This exercise
 labels only the two selected regions on PDF page 4; a full-document project
-would need to inspect and label other relevant regions too. This guide
-uses Label Studio's normal submission behavior and adds no page-completion system.
+would need to inspect and label other relevant regions too.
 
 </Recipe>
 
@@ -350,8 +339,8 @@ benchmarking workflow, model-specific format-conversion adapters translate each
 detector's output into that common contract.
 
 **What this does not do.** An export does not certify annotation quality or
-include every source file. This pass supplies neither a Data Snapshot
-evaluation adapter nor a COCO converter. A destination schema must be chosen
+include every source file. The recipe does not convert exports to COCO or
+the Data Snapshot evaluation schema. A destination schema must be chosen
 for the actual downstream task before conversion is implemented.
 
 </Recipe>

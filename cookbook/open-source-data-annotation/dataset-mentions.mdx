@@ -55,15 +55,11 @@ passages are supplied separately for optional verification.
 
 **Result:** Doccano contains a sequence-labeling project with 14 unchanged sentences and one DATASET label.
 
-Doccano runs a web application and a task worker. The worker handles imports
-and exports, so a working login page alone does not establish a complete
-installation. An isolated environment keeps the application's older
-dependencies separate from other Python projects.
+Doccano uses a web application for labeling and a worker for imports and
+exports. Both must remain running while completing the exercise.
 
-The example uses doccano 1.8.4 with Python 3.10. The downloadable requirements
-include compatibility bounds for dependencies that have changed since that
-release. The commands use uv to apply those bounds as explicit dependency
-overrides. The commands use a Linux or macOS shell;
+Install doccano 1.8.4 with Python 3.10 and the supplied requirements file.
+The commands use a Linux or macOS shell;
 the [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/)
 covers other supported setups.
 
@@ -80,10 +76,8 @@ covers other supported setups.
 | `text` | This exact text is displayed and labeled. |
 | `label` | The empty list supplies the native annotation field without revealing any answers. |
 
-The JSONL file adapts the existing CSV for doccano: `sentence` becomes
-`text`, `document_id` is preserved, and `m01`–`m14` identify the source rows
-in order. The CSV's `mention_text` answers and notes are omitted, and `label`
-is an empty list. The sentence text is unchanged.
+The input contains 14 records, identified as `m01`–`m14`. Each starts with
+an empty `label` list so that annotation begins without suggested answers.
 
 ```json file=../../website/static/cookbook-files/open-source-data-annotation/passages.jsonl
 ```
@@ -120,9 +114,7 @@ doccano task --concurrency 1
 
 4. Open `http://127.0.0.1:8000` and sign in. Create a **Sequence Labeling**
    project named `Data Use sentence annotation`. Disable overlapping
-   entities, grapheme mode, and relation annotation for this exercise. These
-   settings keep the export compatible with the simple span check in
-   Recipe 2.3. In **Labels**, add
+   entities, grapheme mode, and relation annotation. In **Labels**, add
    the exact label `DATASET`.
 5. In **Dataset**, use **Actions → Import Dataset** and select JSONL. Set the
    text column to `text` and the label column to `label`. The unlabeled input
@@ -205,8 +197,7 @@ checks are described in this chapter's Verification section.
    Keep the native file, including its metadata.
 2. Inspect `source_id`, `text`, and the singular `label` field. An entity
    entry has the native form `[start, end, "DATASET"]`; the reviewed negative
-   has an empty list. Some older documentation uses `labels`, so confirm the
-   installed release before interpreting these fields.
+   has an empty list.
 3. Run the check below from the directory containing the original passages,
    export, and downloaded script. Review the displayed text against the
    annotation policy. Use the separate Unicode inputs described in Verification
@@ -221,10 +212,8 @@ their meaning.
 python inspect_doccano.py entities entities-export.jsonl --source passages.jsonl
 ```
 
-The captured [native service fixture](pathname:///cookbook-files/open-source-data-annotation/entities-export.jsonl)
-produces the following output. Its labels
-were entered through the API, so this check demonstrates persistence and
-representation. Human browser review remains a separate check.
+The supplied [example export](pathname:///cookbook-files/open-source-data-annotation/entities-export.jsonl)
+contains API-entered labels and produces the following output.
 
 ```text
 m01 [11:39] 'Household Budget Survey 2021'
@@ -240,12 +229,6 @@ m10 [28:62] 'Population and Housing Census 2014'
 m11 [4:34] 'unemployment rate from the LFS'
 m12 [33:61] 'World Development Indicators'
 PASS: 14 unchanged record(s); 12 span(s).
-```
-
-The focused validator uses only the Python standard library and retains the
-tool's native representation.
-
-```python file=../../website/static/cookbook-files/open-source-data-annotation/inspect_doccano.py
 ```
 
 **Worked example.** A native label triple `[11, 39, "DATASET"]` for `m01`
@@ -299,7 +282,7 @@ disabled in the example project. Changing whitespace, line endings, accents,
 or Unicode normalization after labeling can move offsets.
 
 The optional [unicode-passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/unicode-passages.jsonl)
-contains the earlier teaching cases `p06` and `p07`. They preserve composed
+contains two practice passages, `p06` and `p07`. They preserve composed
 and combining accents, a leading emoji, and a newline. Import these two
 records into a separate sequence-labeling project with the same settings.
 Label exactly `Labour Force Survey` in each, confirm both records, and export
@@ -309,10 +292,9 @@ as `unicode-export.jsonl`. Then run:
 python inspect_doccano.py entities unicode-export.jsonl --source unicode-passages.jsonl
 ```
 
-The [Unicode export fixture](pathname:///cookbook-files/open-source-data-annotation/unicode-export.jsonl)
-is recorded separately from the 14-sentence sample. Browser selection still
-needs the manual round-trip check. Compare the browser's highlighted words
-with `text[start:end]` without changing or normalizing the source text.
+Use the [Unicode example export](pathname:///cookbook-files/open-source-data-annotation/unicode-export.jsonl)
+to inspect the expected offsets. Compare the browser's saved highlights with
+`text[start:end]` in the export. Keep the source text unchanged.
 
 ## Checklist
 
