@@ -30,7 +30,7 @@ model or metadata extraction is required.
 ## Target state
 
 - Each input PDF has one Label Studio task whose page images follow the PDF page order.
-- Figure and table boxes follow written boundary rules and have been submitted.
+- Figure and table boxes use the intended labels and have been submitted.
 - The native export preserves the source filename, page association, and labels.
 
 ## Maturity levels
@@ -194,24 +194,18 @@ python create_pdf_project.py \
 | `--batch shona` | The script creates `ls-media/shona/` for the rendered images and `tasks.json`. An existing batch name is refused to preserve its files. |
 | `--title "Shona policy brief"` | This name appears in Label Studio's project list. |
 
-9. Follow the project address printed by the script and sign in with the
-   account from Step 6. Open its task and confirm that all 12 pages load in
-   order. If images do not load, check that the media directory in `.env`
-   matches `--data-root`.
+9. Open `http://127.0.0.1:8080` in a browser and sign in with the account
+   from Step 6. Under **Recent Projects**, open **Shona policy brief**.
+   The project's Data Manager should show one row, corresponding to the
+   single PDF imported in Step 8. Click that row to open the annotation
+   interface and confirm that all 12 page images load in order. If images
+   do not load, check that the media directory in `.env` matches `--data-root`.
 
-The task fields connect the source PDF to its images:
-
-| Field | Meaning |
-|---|---|
-| `data.pages` | This ordered list contains server-relative image addresses. |
-| `meta.source_file` | This field preserves the PDF path relative to the input directory. |
-| `meta.page_count` | This field records the number of rendered pages. |
-
-The downloadable configuration names the image object `pdf` and the labeling
-control `rectangles`. These names also appear in exported results.
-
-```xml file=../../website/static/cookbook-files/open-source-data-annotation/multipage-labels.xml
-```
+The supplied `multipage-labels.xml` file preconfigures the project with two
+labels: **Figure** and **Table**. Labels can be changed under
+**Settings → Labeling Interface**, but customization is outside this tutorial.
+For a walkthrough of multipage PDF annotation, see Label Studio's
+[Paginated Multi-Image Labeling tutorial](https://labelstud.io/videos/announcing-paginated-multi-image-labeling/).
 
 **Worked example.** With the policy brief in `input/`, the command creates
 a project named `Shona policy brief` containing one task with 12 page images.
@@ -239,45 +233,32 @@ batch before retrying; the script does not delete partial work automatically.
 
 </Recipe>
 
-<Recipe title="1.2 Submit reviewed figure and table boxes" level="Foundational" skills="Data curator or document annotator" time="Twenty minutes for the two regions on PDF page 4">
+<Recipe title="1.2 Draw and submit figure and table boxes" level="Foundational" skills="Data curator or document annotator" time="Twenty minutes for the two regions on PDF page 4">
 
 **Result:** The document task contains submitted rectangles labeled Figure and Table.
 
-An annotation label identifies the kind of region. A boundary rule defines how much of
-the page belongs inside that region. Without a common rule, two annotators
-can select the same chart while including different titles or notes.
+1. In the annotation interface, navigate to PDF page 4. Select **Figure**,
+   then click and drag to draw a box around Figure 1.
+2. Click a box to select it, then drag a corner or edge to resize it.
+   To practice deleting, draw an extra box, select it, and press
+   **Backspace** (**Delete** on a Mac).
+3. Select **Table** and draw a box around Table 1 on the same page. If a
+   box has the wrong label, select it and choose the correct label.
+4. Continue to PDF pages 5–8 for optional practice with the additional
+   figures. These pages can be left unannotated for this tutorial.
+   Leave other pages without boxes if they are not being labeled.
+5. Click **Submit** to save the annotations for the whole PDF. Pages without
+   boxes remain unannotated; no separate submission is needed for each page.
+   Reopen the task from the Data Manager and confirm that the boxes remain
+   saved. Use **Update** to save any later edits.
 
-For this example, a `Figure` includes the chart, title, axes, legend where
-present, source, and note. A `Table` includes its title, unit, headings,
-cells, source, and note. The report header, page number, and surrounding
-research prose stay outside. A photograph or a paragraph is not a figure
-under this chapter's analytical labeling policy.
+**Worked example.** Drawing boxes around Figure 1 and Table 1 on PDF page 4,
+then clicking **Submit**, saves one Figure box and one Table box for the PDF.
+Labeling the optional pages adds more boxes to the same document task.
 
-1. Open the document task, inspect its pages, and navigate to PDF page 4.
-   Select `Figure` and draw one rectangle around Figure 1, including its
-   title, axes, legend, and source line.
-2. Resize an edge to include the source line beneath the chart. To practice
-   correction, draw a temporary extra rectangle on nearby prose, select it,
-   and delete it. The intended figure box should remain.
-3. On the same page, select `Table` and enclose Table 1 with its title,
-   headings, cells, and source line. If a box has the wrong label, select
-   the box and change the label before submission. Rectangle rotation is
-   disabled in the supplied configuration.
-4. Revisit both regions on PDF page 4, then click **Submit**. After editing a submitted task,
-   use the tool's update action to save the revision. Confirm that the task
-   is recorded as annotated. Closing a task with an unfinished draft does
-   not establish that the intended annotations were submitted.
-
-**Worked example.** The intended final annotation has one `Figure` and one
-`Table`, both on PDF page 4. The figure box includes the labor-force chart's
-caption and source, and the table box includes the demographic table's
-caption and source. The actual rectangle coordinates depend on the
-boundaries drawn. No exact pixel match is required.
-
-**What this does not do.** Two submitted rectangles do not establish agreement
-between annotators or completeness on the source document. This exercise
-labels only the two selected regions on PDF page 4; a full-document project
-would need to inspect and label other relevant regions too.
+**What this does not do.** This exercise does not produce a complete
+annotation of the publication. An unannotated page may still contain
+figures or tables.
 
 </Recipe>
 
@@ -290,16 +271,16 @@ data and annotation results. An annotation result is a labeled region within
 a submitted annotation. Predictions and unfinished drafts are separate from
 submitted annotations and should not be silently treated as reviewed labels.
 
-1. In the project's data manager, select **Export** and choose **JSON**.
-   Save the file as `labelstudio-export.json`. Keep the source PDF, rendered
+1. In the project page, select **Export** and choose **JSON**.
+   It will automatically download the JSON export. Keep the source PDF, rendered
    images, and labeling configuration with it because an image address alone
    does not embed the image bytes.
 2. Inspect the exported task's `data.pages` and `meta.source_file`. Confirm
    that the page images still correspond to the correct source PDF.
-3. Inspect `annotations[].result`. Find two `rectanglelabels` results and
-   check the fields below. Use the submitted annotation and exclude drafts
-   and predictions. If several annotators contributed, decide which reviewed
-   annotation to use explicitly.
+3. Inspect `annotations[].result`. Find the Figure and Table results for
+   PDF page 4 and check the fields below. Additional results appear if the
+   optional pages were labeled. Use the submitted annotation and exclude drafts
+   and predictions.
 
 | Field | Meaning |
 |---|---|
@@ -367,7 +348,7 @@ for the actual downstream task before conversion is implemented.
 ## Common mistakes
 
 - A different media root in the server and script produces image addresses that the server cannot resolve.
-- A box that omits a source or note violates this example's boundary policy even when it includes the chart or cells.
+- A rectangle is left with the wrong label after editing.
 - A saved draft is mistaken for a submitted annotation.
 - A percentage width is interpreted as a right-edge coordinate or a pixel count.
 
@@ -383,6 +364,6 @@ for the actual downstream task before conversion is implemented.
 <Checklist id="open-source-data-annotation-boxes" items={[
   'The local installation and media root are configured.',
   'The PDF directory creates one multipage task per document.',
-  'The figure and table follow the boundary policy and have been submitted.',
+  'The figure and table have the intended labels and have been submitted.',
   'The native JSON and source images are retained with their page identity.'
 ]} />
