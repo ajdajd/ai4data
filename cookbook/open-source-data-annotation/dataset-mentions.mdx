@@ -41,12 +41,10 @@ it does not require a model or the other chapters.
 | **AI-native** | A model could propose spans for human correction with provenance retained. This extension is reserved for Pass 2. |
 
 :::info[Running example]
-The exercise reuses all 14 sentences from the
-[Monitoring of Data Use sample](pathname:///cookbook-files/monitoring-data-use/labelled_sample.csv).
-They are fictional teaching text. Twelve sentences contain a reference
-mention and two are negative examples. The doccano input preserves each
-sentence and its original document identifier. Two additional Unicode
-passages are supplied separately for optional verification.
+The exercise reuses 14 fictional sentences from the
+[Monitoring of Data Use cookbook](/cookbook/monitoring-data-use/detect).
+The task is to mark references to data sources in twelve sentences and review
+two sentences that have no mentions to label.
 :::
 
 ## Recipes
@@ -58,16 +56,22 @@ passages are supplied separately for optional verification.
 Doccano uses a web application for labeling and a worker for imports and
 exports. Both must remain running while completing the exercise.
 
-Install doccano 1.8.4 with Python 3.10 and the supplied requirements file.
-The commands use a Linux or macOS shell;
-the [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/)
-covers other supported setups.
+### Set up the dependencies
 
-1. Download [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl),
-   [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt),
+1. Create a working directory with folders for the input passages and exported
+   annotations, then enter it.
+
+```shell
+mkdir -p annotation-entities/input annotation-entities/output
+cd annotation-entities
+```
+
+2. Download [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl)
+   into `input`. Download
+   [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt)
    and [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
-   into a working directory. JSONL stores one JSON object per line. The file
-   is UTF-8 text, and each record contains the fields below.
+   into the working directory. JSONL stores one JSON object per line.
+   Inspect the UTF-8 input before importing it; each record has these fields.
 
 | Field | Meaning |
 |---|---|
@@ -82,50 +86,73 @@ an empty `label` list so that annotation begins without suggested answers.
 ```json file=../../website/static/cookbook-files/open-source-data-annotation/passages.jsonl
 ```
 
-2. Create the environment and initialize a new local database. Choose a local
-   account password when prompted. Run initialization once for a new state
-   directory, and keep that directory when restarting the tool.
-
-The following commands start the web application. The `DOCCANO_HOME` setting
-keeps its state in the working directory.
+3. Create an isolated Python 3.10 environment and install the supplied
+   dependencies, including doccano 1.8.4. The `--override` option applies the
+   compatibility versions in the requirements file. For platform-specific
+   installation help, see the
+   [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/).
 
 ```shell
 python3.10 -m venv .venv-doccano
 source .venv-doccano/bin/activate
 python -m pip install uv
 uv pip install --python python -r requirements-doccano.txt --override requirements-doccano.txt
-export DOCCANO_HOME="$PWD/doccano-entities-state"
-doccano init
-read -rsp "Local annotator password: " DOCCANO_PASSWORD
-doccano createuser --username annotator --password "$DOCCANO_PASSWORD"
-unset DOCCANO_PASSWORD
-doccano webserver --port 8000 --workers 1
 ```
 
-3. In a second terminal in the same directory, activate the environment,
-   select the same state directory, and start the worker. Leave both
-   terminals running while importing and exporting.
+### Configure doccano
+
+4. Create `.env` to set the local database and upload directory. Change
+   `doccano-state` here to store the application state elsewhere.
+
+```shell
+cat > .env <<EOF
+DOCCANO_HOME="$PWD/doccano-state"
+EOF
+```
+
+5. Initialize the database and create the `annotator` account. Choose a password
+   when prompted. These credentials are only for this local doccano instance.
+
+```shell
+dotenv -f .env run --no-override -- doccano init
+read -rsp "Local annotator password: " DOCCANO_PASSWORD
+dotenv -f .env run --no-override -- \
+  doccano createuser --username annotator --password "$DOCCANO_PASSWORD"
+unset DOCCANO_PASSWORD
+```
+
+6. Start the web application in this terminal.
+
+```shell
+dotenv -f .env run --no-override -- doccano webserver --port 8000 --workers 1
+```
+
+   In a second terminal, enter `annotation-entities`, activate the environment,
+   and start the import/export worker. Leave both terminals running.
 
 ```shell
 source .venv-doccano/bin/activate
-export DOCCANO_HOME="$PWD/doccano-entities-state"
-doccano task --concurrency 1
+dotenv -f .env run --no-override -- doccano task --concurrency 1
 ```
 
-4. Open `http://127.0.0.1:8000` and sign in. Create a **Sequence Labeling**
-   project named `Data Use sentence annotation`. Disable overlapping
-   entities, grapheme mode, and relation annotation. In **Labels**, add
-   the exact label `DATASET`.
-5. In **Dataset**, use **Actions → Import Dataset** and select JSONL. Set the
-   text column to `text` and the label column to `label`. The unlabeled input
-   supplies `label: []` for each record. Confirm that 14 records import without errors and that
-   `source_id` is retained as record metadata. Do not substitute the tool's
-   internal numeric record ID for this source identifier.
+7. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and log in as `annotator`
+   with the password from Step 5. On the project list, click **Create**.
+   Name the project `Data Use sentence annotation` and choose
+   **Sequence Labeling**. Leave overlapping entities, grapheme mode, and
+   relation annotation disabled, then save the project. Open **Labels** in the
+   project menu and add `DATASET`. For another use case, choose the label names
+   that describe the entities to mark.
+8. Open **Dataset → Actions → Import Dataset**. Choose **JSONL** and select
+   `input/passages.jsonl`. Set the text column to `text` and the label column
+   to `label`, then import the file. Expect 14 records. Click
+   **Start annotation** to open the first sentence. Its metadata should include
+   `source_id: m01`, and the label list should offer `DATASET`.
 
 **Worked example.** Record `m01` contains “We use the Household Budget
 Survey 2021 to estimate consumption per adult equivalent.” Record `m14`
-contains “The outlook covers twelve countries in the region.” Both records
-need review, including the negative example.
+contains “The outlook covers twelve countries in the region.” Importing
+`input/passages.jsonl` puts both in the project without highlighted words,
+ready for annotation.
 
 **What this does not do.** This local setup does not configure a shared
 production service, OCR, or PDF text extraction. The passages are prepared
@@ -133,42 +160,37 @@ inputs. The application must not transform them after span positions are set.
 
 </Recipe>
 
-<Recipe title="2.2 Review exact dataset spans" level="Foundational" skills="Data curator or research annotator" time="Twenty minutes">
+<Recipe title="2.2 Label dataset mentions" level="Foundational" skills="Data curator or research annotator" time="Twenty minutes">
 
 **Result:** Each passage has reviewed entity labels or an explicit review decision that no dataset is mentioned.
 
-The `DATASET` label follows the existing Data Use sample's broad policy:
-it marks a specific data source referred to by a name, acronym, or identifiable
-description. This includes a survey, census, indicator series, or a specific
-report cited as a source of data. Mark the referring phrase supplied by the
-sample's reference interpretation. A generic phrase such as “a food security
-report” does not identify a specific source.
+For this exercise, `DATASET` marks a specific source of data: a survey,
+census, indicator series, or report. The source may be named or described.
+A generic phrase such as “a food security report” receives no label.
 
-A span policy must state whether qualifiers and acronyms belong in one
-selection. Here, `Household Budget Survey (HBS) 2021` is one span, matching
-the reused sample. This is a teaching policy; each project must define its
-own boundaries. The current AI4Data extraction implementation also
-distinguishes named, descriptive, and vague references; this introductory
-exercise uses only one label.
-
-1. Open `m01` and select `Household Budget Survey 2021`.
-   Apply `DATASET`, excluding the preceding “the” and the following context.
+1. In the annotation interface, find `source_id: m01` in the record metadata.
+   Drag across `Household Budget Survey 2021` in the sentence, then choose
+   `DATASET` from the label menu. The selected words should appear highlighted.
+   Click the review indicator (initially **×**) in the annotation toolbar.
+   It should change to **✓**, marking the sentence as reviewed.
 2. In `m02`, label `HBS`. In `m08`, select the entire phrase
-   `Household Budget Survey (HBS) 2021` as one span.
-3. Review the remaining specific references in `m03`–`m12`. The sample includes
+   `Household Budget Survey (HBS) 2021` as one span. Confirm both sentences.
+3. Use the navigation arrows to review the remaining references in `m03`–`m12`.
+   Confirm each sentence after labeling it. The sample includes
    the descriptive phrase `The labour survey` in `m07` and a report cited as
-   a data source in `m04`. Leave `m13` and `m14` without an entity. Use the
-   tool's completion/confirmation action after inspecting every sentence,
-   including both negative examples.
-4. Practice correction by selecting an overlong span, deleting its label,
-   and selecting the intended words again. Reopen the record and confirm
-   that the corrected selection remains saved.
+   a data source in `m04`.
+4. Read `m13` and `m14` and leave them without highlighted words. Click the
+   review indicator so that it shows **✓** for each. This records a reviewed
+   sentence with no specific data-source mention.
+5. To correct a selection, right-click its highlighted words to remove it,
+   then select the intended words and apply `DATASET` again. Check that the
+   review indicator shows **✓**, navigate away, and return to check that the
+   corrected highlight remains saved.
 
 **Worked example.** The intended selection in `m01` is
-`Household Budget Survey 2021`. It begins at character position 11 and ends
-just before position 39. The reused reference sample has 12 mentions across
-14 sentences. That count expresses the stated labeling policy; a structural
-validator cannot establish that the semantic decisions are correct.
+`Household Budget Survey 2021`. After labeling and confirming all 14 sentences,
+the example has 12 highlighted mentions. Records `m13` and `m14` are confirmed
+without highlights.
 
 **What this does not do.** This exercise does not resolve every descriptive
 or vague reference in research literature. Difficult cases need a documented
@@ -181,39 +203,24 @@ different positions remain separate mentions.
 
 **Result:** A native doccano JSONL export preserves the original passages and reconstructs every selected mention.
 
-An offset is a character position in the text that was imported. The start
-position is included and the end position is excluded. Thus `text[11:39]`
-selects `Household Budget Survey 2021` in `m01`.
-These positions are not UTF-8 byte counts.
-
-The validator compares every exported passage with its original source before
-displaying the selected words. Keeping the text unchanged after annotation
-preserves the reference for these positions. Additional character-handling
-checks are described in this chapter's Verification section.
+The export stores selected words as character positions, called offsets.
+The inspection script displays the words at those positions and checks that
+the exported sentences still match the input.
 
 1. Use **Actions → Export Dataset**, choose ordinary sequence-labeling
    **JSONL**, and include the complete reviewed set. Extract the download
-   archive if necessary. Save the annotator's JSONL as `entities-export.jsonl`.
-   Keep the native file, including its metadata.
-2. Inspect `source_id`, `text`, and the singular `label` field. An entity
-   entry has the native form `[start, end, "DATASET"]`; the reviewed negative
-   has an empty list.
-3. Run the check below from the directory containing the original passages,
-   export, and downloaded script. Review the displayed text against the
-   annotation policy. Use the separate Unicode inputs described in Verification
-   for additional character-handling checks.
+   archive if necessary. Save the annotator's JSONL in `output` as
+   `entities-export.jsonl`. Keep the native file unchanged, including its metadata.
+2. In a terminal in `annotation-entities`, run the inspection script. It prints
+   each selected phrase on its own line for easier inspection.
 
-The command reads both files without modifying them. It rejects changed text,
-missing or duplicate source identifiers, invalid offsets, unknown labels, and
-overlapping spans. It displays the selected words so that a human can check
-their meaning.
-
-```bash
-python inspect_doccano.py entities entities-export.jsonl --source passages.jsonl
+```shell
+python inspect_doccano.py entities output/entities-export.jsonl \
+  --source input/passages.jsonl
 ```
 
 The supplied [example export](pathname:///cookbook-files/open-source-data-annotation/entities-export.jsonl)
-contains API-entered labels and produces the following output.
+shows the expected annotations. With the same selections, the command prints:
 
 ```text
 m01 [11:39] 'Household Budget Survey 2021'
@@ -231,9 +238,26 @@ m12 [33:61] 'World Development Indicators'
 PASS: 14 unchanged record(s); 12 span(s).
 ```
 
+The first path selects the export to inspect; `--source` selects the original
+input. Change these paths when using other files. The script rejects changed
+text, missing or duplicate source identifiers, invalid offsets, unknown labels,
+and overlapping spans.
+
+3. Compare the displayed phrases with the highlights saved in doccano.
+   Open `output/entities-export.jsonl` in a text editor to inspect a record's
+   fields. Keep `input/passages.jsonl` with the export so that its offsets can
+   always be checked against the original text.
+
+| Field | What to inspect |
+|---|---|
+| `source_id` | The identifier connects each annotation to its input sentence, regardless of the tool's internal record ID. |
+| `text` | The sentence must match the input exactly. |
+| `label` | Each selection has the form `[start, end, "DATASET"]`. The start is included and the end is excluded. Positions count Unicode characters. |
+
 **Worked example.** A native label triple `[11, 39, "DATASET"]` for `m01`
-reconstructs `Household Budget Survey 2021`. A complete export should contain
-the same 14 source identifiers, including `m13` and `m14` with no entity labels.
+reconstructs `Household Budget Survey 2021`, the phrase selected in Recipe 2.2.
+The export contains the same 14 source identifiers, including `m13` and `m14`
+with no entity labels.
 
 **What this does not do.** Valid offsets can still select the wrong words.
 An empty label list does not prove that a person reviewed the record. The
@@ -246,7 +270,6 @@ quality. Relation-enabled exports are outside this introductory format.
 
 - Native JSONL preserves text and character offsets without an intermediary annotation schema.
 - The official container setup is an alternative to the isolated Python installation.
-- Optional GLiNER2 preannotation belongs after successful manual export and verification; it is not implemented in this pass.
 
 ## World Bank examples
 
@@ -283,13 +306,15 @@ or Unicode normalization after labeling can move offsets.
 
 The optional [unicode-passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/unicode-passages.jsonl)
 contains two practice passages, `p06` and `p07`. They preserve composed
-and combining accents, a leading emoji, and a newline. Import these two
-records into a separate sequence-labeling project with the same settings.
+and combining accents, a leading emoji, and a newline. Download it into
+`input`. Import these two records into a separate sequence-labeling project
+with the same settings.
 Label exactly `Labour Force Survey` in each, confirm both records, and export
-as `unicode-export.jsonl`. Then run:
+to `output/unicode-export.jsonl`. Then run from `annotation-entities`:
 
-```bash
-python inspect_doccano.py entities unicode-export.jsonl --source unicode-passages.jsonl
+```shell
+python inspect_doccano.py entities output/unicode-export.jsonl \
+  --source input/unicode-passages.jsonl
 ```
 
 Use the [Unicode example export](pathname:///cookbook-files/open-source-data-annotation/unicode-export.jsonl)

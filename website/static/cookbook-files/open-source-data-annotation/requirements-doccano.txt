@@ -2,6 +2,7 @@
 # Use uv pip install -r requirements-doccano.txt --override requirements-doccano.txt.
 # Doccano's metadata requires Pydantic 2; the tested environment uses version 1.
 doccano==1.8.4
+python-dotenv[cli]>=1,<2
 # environs 9.5 expects marshmallow 3; doccano's parsers use Pydantic 1 APIs.
 marshmallow==3.26.2
 pydantic==1.10.27
