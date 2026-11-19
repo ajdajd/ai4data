@@ -272,15 +272,22 @@ a submitted annotation. Predictions and unfinished drafts are separate from
 submitted annotations and should not be silently treated as reviewed labels.
 
 1. In the project page, select **Export** and choose **JSON**.
-   It will automatically download the JSON export. Keep the source PDF, rendered
-   images, and labeling configuration with it because an image address alone
-   does not embed the image bytes.
-2. Inspect the exported task's `data.pages` and `meta.source_file`. Confirm
-   that the page images still correspond to the correct source PDF.
-3. Inspect `annotations[].result`. Find the Figure and Table results for
-   PDF page 4 and check the fields below. Additional results appear if the
-   optional pages were labeled. Use the submitted annotation and exclude drafts
-   and predictions.
+   Save the downloaded file in the working directory as `labelstudio-export.json`.
+2. Run the following command to create an indented copy of the export.
+
+```shell
+python -m json.tool labelstudio-export.json labelstudio-export.pretty.json
+```
+
+3. Open `labelstudio-export.pretty.json` in a text editor.
+   Use the editor's Find function to locate `"pages"` under `"data"` and
+   `"source_file"` under `"meta"`. Confirm the source PDF and its 12 page
+   images. Under `"annotations"`, inspect `"result"` for the Figure and Table
+   entries on PDF page 4. Both should have `"item_index": 3`. Additional
+   results appear if the optional pages were labeled. Use the submitted
+   annotation and exclude drafts and predictions.
+   Keep the source PDF, rendered images, and labeling configuration with
+   the original export because an image address alone does not embed the image bytes.
 
 | Field | Meaning |
 |---|---|
@@ -292,17 +299,11 @@ submitted annotations and should not be silently treated as reviewed labels.
 | `value.width` / `value.height` | These values give the rectangle size in the same percentage units. |
 | `value.rotation` | This value records rectangle rotation, which this workflow keeps at zero. |
 
-**Worked example.** The intended export associates both `Figure` and
-`Table` with page index 3, the fourth entry in `data.pages`. The native
-[service export](pathname:///cookbook-files/open-source-data-annotation/labelstudio-export.json)
-contains API-entered example labels. Manual browser review remains a
-separate check.
-As a representation example, an unrotated
-rectangle with `x=10`, `y=20`, `width=30`, and `height=40` has normalized XYXY
-corners `[0.1, 0.2, 0.4, 0.6]`. This arithmetic example is not a claim about
-the rectangle drawn in the UI. Normalized XYXY uses two corners as fractions
-of the image dimensions, whereas Label Studio stores an origin and size as
-percentages.
+**Worked example.** The supplied
+[example export](pathname:///cookbook-files/open-source-data-annotation/labelstudio-export.json)
+contains a Figure result and a Table result with `item_index: 3`, the fourth
+entry in `data.pages`. Its `meta.source_file` retains the publisher's original
+download filename.
 
 The native Label Studio JSON remains the annotation record. When a downstream
 application requires another representation, a format-conversion adapter

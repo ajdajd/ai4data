@@ -69,25 +69,24 @@ and any reproduction of official reference material retain the ILO's terms.
 
 ## Native service exports
 
-`labelstudio-export.json`, `entities-export.jsonl`, and `unicode-export.jsonl`
-were captured from fresh local Label Studio 1.22.0 and doccano 1.8.4 projects
-during the input reuse checks on November 18, 2026. The PDF export contains
-one 12-page task with Figure and Table results on page index 3. The main
-entity export contains 14 records and 12 spans. The Unicode export contains
-two records and two spans. The occupation file codes-export.jsonl remains the
-native export captured on November 12, 2026.
+`labelstudio-export.json` is a user-provided native Label Studio export of
+the Shona policy brief. It contains one 12-page task with Figure and Table
+results on page index 3 and retains the publisher's original download filename
+in source_file.
 
-The teaching labels were entered programmatically through the services' APIs
-and exported using their native exporters. JSONL bytes were extracted from
-the export archives without rewriting the records. These files demonstrate
-persisted representations, not human annotation quality or a completed
-browser test.
+The doccano files entities-export.jsonl and unicode-export.jsonl were captured
+on November 18, 2026. They contain 14 records with 12 spans and two records
+with two spans, respectively. The occupation file codes-export.jsonl was
+captured on November 12, 2026. Their teaching labels were entered through
+the APIs and exported using doccano's native exporter. JSONL bytes were
+extracted from the archives without rewriting the records. These examples
+demonstrate the export representation; they do not certify annotation quality.
 
 The exports retain native internal IDs and local media paths. Those IDs can
-change in another installation, and the media paths refer to the temporary
-verification service. Inspecting the files needs no service. Reopening them
-as a restored project would require matching media and project configuration;
-project restoration is outside this pass. The supplied PDF and setup script
+change in another installation, and the media paths refer to the
+installation that produced each file. Inspecting the files needs no service.
+Reopening them as a restored project would require matching media and project configuration;
+project restoration is outside this tutorial. The source PDF and setup script
 produce each reader's own images and project instead.
 
 ## Tool licenses

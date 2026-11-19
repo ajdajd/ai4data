@@ -391,7 +391,7 @@ def test_captured_service_exports() -> None:
     tasks = json.loads((ASSETS / "labelstudio-export.json").read_text())
     assert len(tasks) == 1
     assert tasks[0]["meta"]["source_file"] == (
-        "policy_brief_on_shona_community_from_stateless_to_citizens.pdf"
+        "Policy Brief on Shona community_From Stateless to Citizens.pdf"
     )
     assert len(tasks[0]["data"]["pages"]) == 12
     annotations = tasks[0]["annotations"]
