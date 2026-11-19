@@ -21,15 +21,15 @@ annotation label identifies the kind of content. A collection of labeled
 boxes can support document indexing, data curation, or later work with an
 extraction system.
 
-Label Studio displays rendered page images and records rectangles without
-changing the source PDF. A multipage task keeps the pages of one document
-together, so that the annotator can inspect its context before submitting the
-work. This chapter starts with blank tasks and ends with native Label Studio
-JSON. No detection model or metadata extraction is required.
+Label Studio is an open-source tool for labeling data through a browser.
+For this task, it displays rendered PDF pages so that an annotator can draw
+rectangles and assign labels without changing the source PDF. This chapter
+starts with blank tasks and ends with native Label Studio JSON. No detection
+model or metadata extraction is required.
 
 ## Target state
 
-- Each input PDF has one task whose page images follow the PDF page order.
+- Each input PDF has one Label Studio task whose page images follow the PDF page order.
 - Figure and table boxes follow written boundary rules and have been submitted.
 - The native export preserves the source filename, page association, and labels.
 
@@ -42,7 +42,8 @@ JSON. No detection model or metadata extraction is required.
 | **AI-native** | Model suggestions could be reviewed with their provenance and verification retained. That optional extension is outside this pass. |
 
 :::info[Running example]
-This exercise reuses the Data Snapshot cookbook's sample publication,
+This exercise reuses the sample publication from the
+[Data Snapshot cookbook](/cookbook/data-snapshot-end-to-end/preparation),
 *From Stateless to Citizens: The Journey of Shona in Kenya*. The PDF has
 12 pages. PDF page 4 contains Figure 1 on labor-force status and Table 1 on
 demographic characteristics. The exercise labels those two regions while
@@ -56,10 +57,8 @@ keeping the full document together in one task.
 **Result:** Label Studio contains one task for the example PDF, with all 12 page images available for annotation.
 
 The setup script accepts a directory of PDFs, renders every page at 300 dots
-per inch, and creates the project through the tool's API. An API is the
-interface through which the script asks Label Studio to create and import
-records. The script uses a local token for that operation. It does not need a
-model or the AI4Data research environment.
+per inch, and creates the project through the tool's API. It uses a local token for that operation. It does not need a
+trained model or any existing environment.
 
 The commands below use a Linux or macOS shell and Python 3.10 in a separate
 environment. Windows readers can use WSL or adapt environment activation using
@@ -67,61 +66,145 @@ the [official installation guide](https://labelstud.io/guide/install).
 The local media root must be the same absolute directory in the server and
 the script. A container installation needs the corresponding mounted paths.
 
-1. Download [create_pdf_project.py](pathname:///cookbook-files/open-source-data-annotation/create_pdf_project.py),
-   [multipage-labels.xml](pathname:///cookbook-files/open-source-data-annotation/multipage-labels.xml),
-   and [LICENSE.txt](pathname:///cookbook-files/open-source-data-annotation/LICENSE.txt)
-   into one working directory. Keep the XML beside the script because it
-   defines the labeling interface. Obtain the PDF from the
+Steps 1–4 prepare the files, Python environment, and dependencies. Steps 5–9
+configure Label Studio and create the annotation project.
+
+### Files and dependencies
+
+1. Create a working directory named `annotation-pdf` and an `input/`
+   subdirectory inside it. Use `annotation-pdf` as the working directory
+   for subsequent steps.
+   Keep source PDFs in `input/` so that they are separate from the scripts,
+   application database, and generated page images.
+
+The following commands create both directories and enter the working directory.
+
+```shell
+mkdir -p annotation-pdf/input
+cd annotation-pdf
+```
+
+2. Download [create_pdf_project.py](pathname:///cookbook-files/open-source-data-annotation/create_pdf_project.py)
+   and [multipage-labels.xml](pathname:///cookbook-files/open-source-data-annotation/multipage-labels.xml)
+   into `annotation-pdf`. Keep the XML beside the script because it defines
+   the labeling interface.
+3. Obtain the PDF from the
    [ReliefWeb publication page](https://reliefweb.int/report/kenya/policy-brief-stateless-citizens-journey-shona-community-kenya)
    or its [PDF attachment](https://reliefweb.int/attachments/831aca28-6777-4cb9-9b84-8976c63061fb/Policy%20Brief%20on%20Shona%20community_From%20Stateless%20to%20Citizens.pdf).
-   Save it in a new `pdf-input/` subdirectory as
+   Save it in `annotation-pdf/input/` as
    `policy_brief_on_shona_community_from_stateless_to_citizens.pdf`.
    Confirm that it has 12 pages and that PDF page 4 contains Figure 1 and
    Table 1. That directory should contain only this PDF for the worked
    example. The cookbook links to the publication and does not redistribute
    the full PDF.
-2. Install the tool and the two libraries used by the script. The separate
-   `ls-state` directory holds the database, while `ls-media` holds served
-   page images. This separation limits the directory exposed as local media.
+4. Create an isolated Python environment, activate it, and install Label
+   Studio and the libraries used by the recipe. PyMuPDF renders PDF pages,
+   requests communicates with the Label Studio API, and python-dotenv loads
+   the `.env` configuration.
 
-The following commands prepare those directories and start the server. The
-compatibility and execution record is in
-[verification.md](pathname:///cookbook-files/open-source-data-annotation/verification.md).
+The commands below install Label Studio and the PDF setup dependencies.
 
 ```shell
 python3.10 -m venv .venv-labelstudio
 source .venv-labelstudio/bin/activate
-python -m pip install "label-studio==1.22.0" "pymupdf==1.28.2" "requests==2.32.5"
-mkdir -p ls-state ls-media
-export LABEL_STUDIO_BASE_DATA_DIR="$PWD/ls-state"
-export LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT="$PWD/ls-media"
-export LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
-label-studio start --port 8080 --internal-host 127.0.0.1 --no-browser --enable-legacy-api-token
+python -m pip install "label-studio==1.22.0" "pymupdf==1.28.2" "requests==2.32.5" "python-dotenv[cli]>=1,<2"
 ```
 
-3. Open `http://127.0.0.1:8080`, create a local account, and obtain its legacy
-   API token from the account settings. The script uses legacy token
-   authentication. Personal access tokens require a different authentication
-   flow. If the legacy-token option is
-   unavailable, check the server flag and the organization's token settings
-   using the [token documentation](https://labelstud.io/guide/access_tokens).
-4. Open a second terminal in the same working directory, activate the same
-   environment, and set the token without placing it in a downloadable file.
-   Run the command below. `--data-root` identifies the media directory,
-   `--batch` names a new output folder, and `--title` names the project.
+### Label Studio configuration and project creation
 
-The script checks authentication, writes the images and `tasks.json`, creates
-the project, and imports one task per PDF. A repeated batch name is refused
-so that existing images and task files are preserved.
+5. Create separate directories for Label Studio's database and rendered
+   images, then create `.env` with the configuration below. `ls-state`
+   holds the database; `ls-media` holds the page images served to the
+   browser. Leave `LABEL_STUDIO_API_KEY` empty until Step 7.
+
+Keep this local `.env` file out of version control.
+
+```shell
+mkdir -p ls-state ls-media
+cat > .env <<EOF
+LABEL_STUDIO_BASE_DATA_DIR="$PWD/ls-state"
+LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT="$PWD/ls-media"
+LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true
+LABEL_STUDIO_API_KEY=
+EOF
+chmod 600 .env
+```
+
+The command above writes absolute paths into `.env`. Start Label Studio
+with `dotenv run` to load these settings for the server process. Leave
+this terminal running. Exported variables take precedence over `.env` values.
+
+```shell
+dotenv -f .env run --no-override -- label-studio start --port 8080 --internal-host 127.0.0.1 --no-browser --enable-legacy-api-token
+```
+
+6. Open a second terminal in `annotation-pdf` and initialize a local account
+   with legacy tokens enabled. Enter an email address when prompted and set
+   the account password at the initialization prompt. Use this account to
+   sign in when opening the project in Step 9.
+
+Activate the environment and create the account with the following commands.
+`dotenv run` supplies the same `.env` settings to the initialization command.
 
 ```shell
 source .venv-labelstudio/bin/activate
-read -rsp "Label Studio legacy token: " LABEL_STUDIO_API_KEY
-export LABEL_STUDIO_API_KEY
-python create_pdf_project.py --input-dir pdf-input --data-root "$PWD/ls-media" --batch shona --title "Shona policy brief"
+read -rp "Local account email: " LABEL_STUDIO_USERNAME
+dotenv -f .env run --no-override -- label-studio init --username "$LABEL_STUDIO_USERNAME" --enable-legacy-api-token
 ```
 
-5. Follow the project address printed by the script. Open its task and confirm
+Label Studio generates a legacy token when it creates the account. Run
+this command to display it:
+
+```shell
+dotenv -f .env run --no-override -- label-studio user --username "$LABEL_STUDIO_USERNAME"
+```
+
+The command prints an account record. Find the `token` field and copy the
+string inside its quotes. For example, the relevant part of the output
+has this form; `<legacy-token>` represents the generated token.
+
+```text
+'token': '<legacy-token>'
+```
+
+7. Edit `.env` in `annotation-pdf` and replace the empty value with the
+   copied token from Step 6. Keep the three configuration settings unchanged
+   and keep this terminal open for Step 8.
+
+After editing, the API-key line should look like this, with the placeholder
+replaced by the actual key.
+
+```text
+LABEL_STUDIO_API_KEY="paste-your-legacy-token-here"
+```
+
+Save `.env` before proceeding. The setup script loads it automatically from
+the working directory, so no shell-loading commands are needed.
+
+8. Run the setup script below. It checks authentication, renders the PDF
+   pages, writes `tasks.json`, creates the project, and imports one task per
+   PDF. Each line after the script name supplies one parameter.
+
+The parameters select the source PDFs, the media directory, a new batch
+folder, and the project's displayed name.
+
+```shell
+python create_pdf_project.py \
+  --input-dir input \
+  --data-root ls-media \
+  --batch shona \
+  --title "Shona policy brief"
+```
+
+| Parameter | Meaning |
+|---|---|
+| `--input-dir input` | The script reads PDFs from `input/` and its subdirectories. |
+| `--data-root ls-media` | The script writes images under `ls-media/`. This must be the same directory configured in `.env`. |
+| `--batch shona` | The script creates `ls-media/shona/` for the rendered images and `tasks.json`. An existing batch name is refused to preserve its files. |
+| `--title "Shona policy brief"` | This name appears in Label Studio's project list. |
+
+9. Follow the project address printed by the script and sign in with the
+   account from Step 6. Open its task and confirm
    that all 12 pages load in order. A broken image usually indicates a mismatch
    between the server's media root and `--data-root`. The local-storage entry
    supports media access; no storage synchronization is needed after task import.
@@ -140,30 +223,23 @@ control `rectangles`. These names also appear in exported results.
 ```xml file=../../website/static/cookbook-files/open-source-data-annotation/multipage-labels.xml
 ```
 
-The complete standalone implementation is available for inspection here.
+**Worked example.** With the policy brief in `input/`, the command creates
+a project named `Shona policy brief` containing one task with 12 page images.
+The images and task file are saved under `ls-media/shona/`. The regions on
+PDF page 4 remain unlabeled until Recipe 1.2.
 
-```python file=../../website/static/cookbook-files/open-source-data-annotation/create_pdf_project.py
-```
-
-**Worked example.** The Python 3.10 service check on November 18, 2026 used
-the full 12-page policy brief and printed the following output:
+The terminal output follows this pattern. `<project-id>` and
+`<working-directory>` represent values from the local installation.
 
 ```text
-Created project 1: 1 PDF task(s).
+Created project <project-id>: 1 PDF task(s).
 Rendered 12 page(s).
-Tasks: /tmp/annotation-reuse-pdf-check/media/verified-shona/tasks.json
-Open http://127.0.0.1:18081/projects/1/data
+Tasks: <working-directory>/ls-media/shona/tasks.json
+Open http://127.0.0.1:8080/projects/<project-id>/data
 ```
 
-Project ID `1`, the absolute `/tmp/` path, and port `18081` belong to that
-temporary verification installation. Each installation prints its own ID,
-path, and project address. The command above uses port `8080` and batch
-`shona`. Confirm one PDF task and 12 rendered pages, then open PDF page 4
-to find both annotation targets.
-
-The same command processes
-multiple PDFs when they are placed in the input directory. Batches of about
-10–20 PDFs are a practical starting guideline, adjusted for length,
+The same command processes multiple PDFs when they are placed in `input/`.
+Batches of about 10–20 PDFs are a practical starting guideline, adjusted for length,
 complexity, and available resources. This is not a technical limit.
 
 **What this does not do.** The command does not label regions, run inference,
@@ -230,7 +306,7 @@ submitted annotations and should not be silently treated as reviewed labels.
    images, and labeling configuration with it because an image address alone
    does not embed the image bytes.
 2. Inspect the exported task's `data.pages` and `meta.source_file`. Confirm
-   that the two images still correspond to the correct source PDF.
+   that the page images still correspond to the correct source PDF.
 3. Inspect `annotations[].result`. Find two `rectanglelabels` results and
    check the fields below. Use the submitted annotation and exclude drafts
    and predictions. If several annotators contributed, decide which reviewed
@@ -308,10 +384,10 @@ for the actual downstream task before conversion is implemented.
 
 ## Verification
 
-- Confirm that one input PDF creates one task containing two ordered page images.
+- Confirm that the example PDF creates one task containing 12 ordered page images.
 - Confirm that the submitted results contain a Figure and a Table, both on page index 3.
 - Compare each exported rectangle with its displayed page and check its label and percentage units.
-- Complete the [manual testing checklist](pathname:///cookbook-files/open-source-data-annotation/manual-testing.md), including corrections and submission after reopening the task.
+- Correct a rectangle, submit the task, reopen it, and confirm that the saved change appears in the export.
 
 ## Checklist
 

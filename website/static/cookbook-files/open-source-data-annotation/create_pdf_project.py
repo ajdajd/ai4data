@@ -4,7 +4,8 @@ Usage: python create_pdf_project.py --input-dir input --data-root ls-media
        --batch shona --title "Shona policy brief"
 
 Dependencies beyond the shared cookbook requirements: PyMuPDF and requests.
-Set LABEL_STUDIO_API_KEY to a legacy token. The server must serve data-root
+Reads .env from the working directory without overriding exported variables.
+Set LABEL_STUDIO_API_KEY there or in the environment. The server must serve data-root
 as its LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT. Exit status is 0 on success
 and 1 on invalid input or an unsuccessful service request. Existing batches
 are never overwritten. A failed service operation can leave a partial project;
@@ -30,6 +31,7 @@ from urllib.parse import quote, urlsplit
 
 import pymupdf
 import requests
+from dotenv import load_dotenv
 
 
 def prepare_tasks(input_dir: Path, output_dir: Path, batch: str) -> list[dict]:
@@ -123,9 +125,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     project_id = None
     try:
+        load_dotenv(Path.cwd() / ".env", override=False)
         token = os.environ.get("LABEL_STUDIO_API_KEY", "").strip()
         if not token:
-            raise ValueError("Set LABEL_STUDIO_API_KEY to a Label Studio legacy token.")
+            raise ValueError("Set LABEL_STUDIO_API_KEY in .env or the environment.")
         url = urlsplit(args.url)
         if (
             url.scheme not in {"http", "https"}

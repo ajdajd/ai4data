@@ -150,6 +150,7 @@ def test_project_creation_and_partial_failure(
         Minimal two-page PDF fixture.
     """
     script = load_script("create_pdf_project")
+    monkeypatch.chdir(tmp_path)
     source = tmp_path / "pdfs"
     source.mkdir()
     (source / "report.pdf").write_bytes(pdf_bytes)
@@ -185,9 +186,66 @@ def test_project_creation_and_partial_failure(
     assert script.main(arguments) == 1
     assert (tmp_path / "media/partial/tasks.json").is_file()
     monkeypatch.delenv("LABEL_STUDIO_API_KEY")
+    (tmp_path / ".env").write_text("LABEL_STUDIO_API_KEY=\n")
     arguments[arguments.index("partial")] = "missing-token"
     assert script.main(arguments) == 1
     assert not (tmp_path / "media/missing-token").exists()
+
+
+@pytest.mark.parametrize("exported_token", [None, "exported-token"])
+def test_project_loads_dotenv_without_overriding_environment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    pdf_bytes: bytes,
+    exported_token: str | None,
+) -> None:
+    """Load the local API key while preserving an exported key's precedence.
+
+    Parameters
+    ----------
+    tmp_path : pathlib.Path
+        Temporary working directory containing the PDF and .env file.
+    monkeypatch : pytest.MonkeyPatch
+        Working-directory, environment, and HTTP replacements.
+    pdf_bytes : bytes
+        Minimal two-page PDF fixture.
+    exported_token : str | None
+        Existing environment value, or None to read the key from .env.
+    """
+    script = load_script("create_pdf_project")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("PYTHON_DOTENV_DISABLED", raising=False)
+    monkeypatch.setenv("LABEL_STUDIO_API_KEY", exported_token or "")
+    if exported_token is None:
+        monkeypatch.delenv("LABEL_STUDIO_API_KEY")
+    keyfile = tmp_path / ".env"
+    keyfile.write_text('LABEL_STUDIO_API_KEY="file-token"\n')
+    before = keyfile.read_bytes()
+    source = tmp_path / "input"
+    source.mkdir()
+    (source / "report.pdf").write_bytes(pdf_bytes)
+    session = MagicMock()
+    session.headers = {}
+    session.__enter__.return_value = session
+    session.post.return_value.json.return_value = {"id": 17}
+    monkeypatch.setattr(script.requests, "Session", lambda: session)
+    assert (
+        script.main(
+            [
+                "--input-dir",
+                str(source),
+                "--data-root",
+                str(tmp_path / "media"),
+                "--batch",
+                "dotenv",
+                "--title",
+                "Dotenv test",
+            ]
+        )
+        == 0
+    )
+    assert session.headers["Authorization"] == f"Token {exported_token or 'file-token'}"
+    assert keyfile.read_bytes() == before
 
 
 def test_unicode_native_spans(tmp_path: Path) -> None:

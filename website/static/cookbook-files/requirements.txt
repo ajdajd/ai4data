@@ -9,3 +9,4 @@ jsonschema>=4.18
 pyyaml>=6.0
 mlcroissant>=1.0
 mcp[cli]>=1.0
+python-dotenv[cli]>=1,<2
