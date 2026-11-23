@@ -143,8 +143,9 @@ doccano_worker_pid=$!
 10. Open **Dataset → Actions → Import Dataset**. Choose **JSONL** and import
    `input/passages.jsonl`. Set the text column to `text` and the label column
    to `label`, then import the file. Expect 14 records.
-11. Click **Start annotation** to open the first sentence. At the right hand side, the metadata should
-   include `source_id: m01`, and the label list should offer `DATASET`.
+11. In the **Dataset** table, find the row with `"source_id": "m01"` in the
+    **Metadata** column. Click **Annotate** on that row. Check that the
+    annotation view shows `m01` and offers the `DATASET` label.
 
 After finishing Recipes 2.2 and 2.3 and any optional checks, stop the
 web application and worker from the same terminal.
