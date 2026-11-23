@@ -139,7 +139,9 @@ doccano_worker_pid=$!
    with the password from Step 5.
 
 8. On the project list, click **Create**.
-   choose **Text Classification** and name the project `Labour survey occupation coding`. Add the project description `Sample exercise`. Check **Allow single label** and create the project.
+   Choose **Text Classification** and name the project `Labour survey occupation coding`.
+   Add the project description `Sample exercise`. Check **Allow single label**
+   and create the project.
 9. Open `input/occupation-codebook.csv` and find the `code` column. In doccano,
    open **Labels** in the project menu. For each value below, choose
    **Actions → Create Label**, enter the value exactly as shown, and click
@@ -194,18 +196,18 @@ occupation categories.
 ```csv file=../../website/static/cookbook-files/open-source-data-annotation/occupation-codebook.csv
 ```
 
-1. In the annotation interface, verify that you are in the first record and the metadata shows `source_id: r01`.
+1. In the annotation interface, open the first record and verify that its metadata shows `source_id: r01`.
 2. Read “primary school teacher” and click `2341` in the category list. Click the **×** button in the toolbar
    and confirm it changes from **×** to **✓** to save the annotation.
-2. Use the navigation arrows to continue. Assign the following and save each after labeling it:
+3. Use the navigation arrows to continue. Assign the following and save each after labeling it:
     - `8322` to `r02`, which describes driving a taxi,
     - `5211` to `r03`, which describes selling vegetables at a market,
     - and `7231` to `r06`, which describes repairing motorcycles.
-3. Assign `NEEDS_REVIEW` to `r07`, “works in a shop”, and `r14`, “helps at
+4. Assign `NEEDS_REVIEW` to `r07`, “works in a shop”, and `r14`, “helps at
    home”. Neither response provides enough detail to support one of the four
    occupation categories. Confirm both responses; the review label keeps
    them visible for later follow-up.
-4. To correct a category, click the supported label to replace the previous
+5. To correct a category, click the supported label to replace the previous
    selection. Ensure that the review indicator shows **✓**, navigate away,
    and return to check that exactly one category remains selected.
 
@@ -259,7 +261,7 @@ and `--codebook` selects the allowed categories. Change these paths for other
 files. The script rejects changed text, missing or duplicate identifiers,
 numeric codes, unknown categories, and empty or multiple labels.
 
-3. Compare the printed assignments with the categories saved in doccano.
+4. Compare the printed assignments with the categories saved in doccano.
    Open `output/codes-export.jsonl` in a text editor to inspect its fields.
    Keep the input responses and codebook with the export so that its labels
    remain interpretable.

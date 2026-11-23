@@ -39,7 +39,7 @@ model or metadata extraction is required.
 |---|---|
 | **Foundational** | A person labels figures and tables and retains the submitted native export. |
 | **AI-ready** | The organization documents labels, page identity, and coordinate units so that software can interpret the export. |
-| **AI-native** | Model suggestions could be reviewed with their provenance and verification retained. That optional extension is outside this pass. |
+| **AI-native** | Model suggestions could be reviewed with their provenance and verification retained. That optional extension is outside this edition. |
 
 :::info[Running example]
 This exercise reuses the sample publication from the
@@ -58,7 +58,8 @@ keeping the full document together in one task.
 
 A Label Studio project contains the documents to annotate and the available
 labels. This recipe creates one task per PDF, with its pages displayed as
-images for labeling.
+images for labeling. The setup script uses Label Studio's API to create the 
+project and import its tasks.
 
 The commands below use a Linux or macOS shell and Python 3.10 in a separate
 environment. Windows readers can use WSL or adapt environment activation using
@@ -237,6 +238,10 @@ batch before retrying; the script does not delete partial work automatically.
 
 **Result:** The document task contains submitted rectangles labeled Figure and Table.
 
+A rectangle associates a region of a page image with an annotation label.
+This exercise labels two regions on PDF page 4. Label Studio saves the
+annotations for all pages together when the document task is submitted.
+
 1. In the annotation interface, navigate to PDF page 4. Select **Figure**,
    then click and drag to draw a box around Figure 1.
 2. Click a box to select it, then drag a corner or edge to resize it.
@@ -332,6 +337,7 @@ for the actual downstream task before conversion is implemented.
 - The standalone script and local installation keep the multipage workflow within one command after setup.
 - The official Docker installation is an alternative when container paths and persistent storage are configured consistently.
 - Tool-native JSON preserves the annotation record; a downstream adapter can be added when a specific application requires one.
+- A document-layout detection model such as [DocLayout-YOLO](https://arxiv.org/abs/2410.12628) could propose Figure and Table boxes for human correction in Label Studio. This would require mapping predictions to the project's labels, page identities, and coordinate units. Model inference and pre-annotation import are outside this edition.
 
 ## World Bank examples
 

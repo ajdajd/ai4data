@@ -33,6 +33,20 @@ distinguishes formal standards from application-specific representations.
 Written labeling rules accompany each task so that syntactically valid
 exports can also be reviewed for their intended meaning.
 
+### Model-assisted annotation
+
+Machine learning models can also propose initial labels for human review.
+For example, an object-detection model can propose boxes around figures and
+tables, while a named entity recognition model can identify candidate dataset
+mentions in text. Annotators then correct inaccurate labels, remove false
+positives, and add missing annotations. This allows them to begin with
+suggestions for review.
+
+This approach may reduce manual effort, depending on prediction quality and
+the time required for review. The recipes in this cookbook teach manual
+annotation workflows. Model-assisted pre-annotation is a possible extension
+and is not implemented in this edition.
+
 ## Prerequisites
 
 - The reader can use a browser and a terminal, run commands, and create an isolated Python 3.10 environment.
@@ -47,15 +61,16 @@ Local services and their databases should be kept separate from other projects.
 
 ## First steps
 
-1. Select the matching task in the chapter table. Allow about five minutes
-   to inspect that chapter's input and labeling rules.
+1. Select [bounding-box annotation](./bounding-boxes.mdx),
+   [named entity annotation](./named-entity-annotation.mdx), or
+   [text classification](./text-classification.mdx) for the task. Allow about
+   five minutes to inspect that chapter's input and labeling rules.
 2. Complete its first recipe to install the tool and prepare the project.
    Allow thirty minutes plus dependency download time.
 3. Complete its manual labeling recipe, then export and inspect the output.
    Allow about thirty-five minutes for the small example.
 
 After a successful export, the related resources explain downstream use.
-Optional model-assisted annotation is reserved for a later pass.
 
 ## Chapters and questions
 
@@ -78,8 +93,10 @@ demonstrates a technique without establishing the maturity of an organization.
 
 ## Running example
 
-The exercises reuse materials from other cookbooks: the published policy
-brief used in the Data Snapshot cookbook, the sentence sample from the
+The three annotation tasks use separate examples because each requires a
+different kind of input and labeling policy. The exercises reuse materials
+from other cookbooks: the published policy brief used in the Data Snapshot
+cookbook, the sentence sample from the
 Monitoring of Data Use cookbook, and the occupation responses from the
 Language Models in Production cookbook. They support practice in marking
 figures and tables, identifying data-source mentions, and assigning categories.
@@ -98,7 +115,7 @@ explain where the teaching materials and example exports come from.
 The examples are small on purpose. Each recipe names its limits and includes
 an inspectable input, action, and intended or observed output. A structurally
 valid export does not prove semantic correctness or reviewer agreement.
-Pass 1 covers manual workflows only. It includes no model inference,
+This edition covers manual workflows only. It includes no model inference,
 training, custom completion system, or downstream evaluation converter.
 
 ## Files
@@ -139,4 +156,4 @@ https://worldbank.github.io/ai4data/cookbook/open-source-data-annotation/
 
 ## Version history
 
-- **0.1 (November 2026).** The first draft covers three independent manual workflows and native exports. Model-assisted extensions remain outside Pass 1.
+- **0.1 (November 2026).** The first draft covers three independent manual workflows and native exports.

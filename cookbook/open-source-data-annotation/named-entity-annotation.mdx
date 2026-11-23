@@ -23,10 +23,10 @@ entity mentions beyond exact string matches and extract structured fields from
 unstructured text. The extracted entities can supply nodes for knowledge graphs,
 and their locations in the source text can help ground large language model outputs.
 
-Using doccano, an annotator can highlight the exact text
-of each entity and assign a label. The
-native JSONL export keeps the original text with each span's label and start
-and end character positions. The positions let a reviewer recover the selected
+Using doccano, an annotator can highlight the exact text of each entity and
+assign a label. The selected range of text is called a span. The native JSONL
+export keeps the original text with each span's label and start and end
+character positions. The positions let a reviewer recover the selected
 text or check whether an automated extraction system finds the same mentions.
 
 ## Target state
@@ -41,7 +41,7 @@ text or check whether an automated extraction system finds the same mentions.
 |---|---|
 | **Foundational** | A person marks entity mentions and checks the selected text in the export. |
 | **AI-ready** | Stable identifiers and validated offsets make the labels reusable by software. |
-| **AI-native** | A model could propose spans for human correction with provenance retained. This extension is reserved for Pass 2. |
+| **AI-native** | A model could propose spans for human correction with provenance retained. This extension is outside this edition. |
 
 :::info[Running example]
 The exercise reuses 14 fictional sentences from the
@@ -136,7 +136,9 @@ doccano_worker_pid=$!
 7. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and log in as `annotator`
    with the password from Step 5.
 8. On the project list, click **Create**.
-   choose **Sequence Labeling** and name the project `Data Use sentence annotation`. Add the project description `Sample exercise`. Leave other settings unchecked, then save the project. 
+   Choose **Sequence Labeling** and name the project `Data Use sentence annotation`.
+   Add the project description `Sample exercise`. Leave other settings unchecked,
+   then save the project.
 9. Open **Labels** in the project menu. Click **Actions** then select **Create Label**. Add `DATASET`
    then click **Save**. For another use case, choose the label names
    that describe the entities to mark.
@@ -162,8 +164,9 @@ contains “The outlook covers twelve countries in the region.” Importing
 ready for annotation.
 
 **What this does not do.** This local setup does not configure a shared
-production service, OCR, or PDF text extraction. The passages are prepared
-inputs. The application must not transform them after span positions are set.
+production service, optical character recognition (OCR), or PDF text
+extraction. The passages are prepared inputs. The application must not
+transform them after span positions are set.
 
 </Recipe>
 
@@ -211,7 +214,7 @@ the exported sentences still match the input.
 1. In the sidebar, go to **Dataset**. Use **Actions → Export Dataset** and choose **JSONL**. Leave **Export only approved documents** unchecked to include all 14 records. Click **Export**.
 2. Extract the download archive and save the
    annotator's JSONL in `output` as `entities-export.jsonl`. Keep the native file unchanged, including its metadata.
-2. Download [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
+3. Download [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
    into `annotation-entities`. In the same terminal, run the script to display
    each selected phrase on its own line.
 
@@ -237,7 +240,7 @@ input. Change these paths when using other files. The script rejects changed
 text, missing or duplicate source identifiers, invalid offsets, unknown labels,
 and overlapping spans.
 
-3. Compare the displayed phrases with the highlights saved in doccano.
+4. Compare the displayed phrases with the highlights saved in doccano.
    Open `output/entities-export.jsonl` in a text editor to inspect a record's
    fields. Keep `input/passages.jsonl` with the export so that its offsets can
    always be checked against the original text.
@@ -264,6 +267,7 @@ quality. Relation-enabled exports are outside this introductory format.
 
 - Native JSONL preserves text and character offsets without an intermediary annotation schema.
 - The official container setup is an alternative to the isolated Python installation.
+- A named entity recognition model such as [GLiNER2](https://arxiv.org/abs/2507.18546) could propose dataset-mention spans for human correction in doccano. Predictions would need to follow the DATASET policy and preserve the exact input text and offset convention. Model inference and pre-annotation import are outside this edition.
 
 ## World Bank examples
 

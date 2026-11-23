@@ -18,8 +18,13 @@ input, action, output, and evidence that the procedure works.
 - The chapter remains understandable independently, with setup before annotation instructions.
 - The explanation introduces fields and unfamiliar terms before the procedure uses them.
 - A worked example names concrete input, action, output, and verification limits.
-- Code uses the shared fictional facts, has an offline test, and states additional dependencies.
+- Code preserves the chapter's documented source text and identifiers, has an offline test, and states additional dependencies.
 - Captured service behavior is distinguished from browser actions, illustrative arithmetic, and unexecuted proposals.
+
+This cookbook uses three task-specific examples: a real policy brief,
+fictional dataset-mention passages, and fictional occupation responses.
+Contributions should retain their source and
+licensing notes and keep each chapter independently usable.
 
 ## Recipe template
 
@@ -52,8 +57,13 @@ an expected export must not be presented as an observed export.
 
 The qualified terms **Data annotation**, **Annotation label**,
 **Image bounding box**, and **Format-conversion adapter** describe the meanings
-used by the recipes. Add definitions to `cookbook/_shared/glossary.md` and run
-the existing generator; do not edit this cookbook's generated glossary by hand.
-The generator selects terms by substring matching without disambiguating their
-senses, so unrelated entries and other meanings can also appear. This known
-limitation remains; the generator and existing definitions are unchanged.
+used by the recipes. Definitions live in `cookbook/_shared/glossary.md`.
+Run `python scripts/docs/build_glossaries.py` after updating the cookbook;
+do not edit the generated glossary by hand or redefine an existing shared
+term for this cookbook.
+
+The generator uses substring matching without distinguishing meanings.
+It can include unrelated entries or definitions that do not apply to data
+annotation, including Annotation, Adapter, Label, and Bounding box. The
+qualified terms above explain the intended meanings. Correcting glossary
+selection requires a separate change to the shared documentation tooling.

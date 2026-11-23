@@ -11,7 +11,7 @@ export const allCookbooks = [
     audience: 'Data practitioners and statistical data curators',
     title: 'Practical Guide to Open-Source Data Annotation Tools',
     description:
-      'Three independent chapters cover multipage PDF bounding boxes with Label Studio, dataset-mention spans with doccano, and occupation-response coding with doccano, using fictional examples and native annotation exports.',
+      'Three independent chapters cover multipage PDF bounding boxes with Label Studio, dataset-mention spans with doccano, and occupation-response coding with doccano, using a real policy brief, fictional text examples, and native annotation exports.',
     chapters: 3,
     to: '/cookbook/open-source-data-annotation/',
   },

@@ -43,6 +43,8 @@ description: Terms used in the open-source-data-annotation cookbook, in plain la
 
 **Language model.** A model that reads and writes text; used in these guides to draft, flag, code, explain, and translate, with a person deciding.
 
+**Layout detection.** A model that finds regions of a page image and returns their class and bounding box.
+
 **Map.** The table of model-assisted tasks with phase, role, review, data sensitivity, model location, and owner.
 
 **Maturity level.** One of three states used in this guide: foundational, AI-ready, AI-native.
