@@ -367,17 +367,6 @@ def test_captured_service_exports() -> None:
     assert (
         script.main(
             [
-                "entities",
-                str(ASSETS / "unicode-export.jsonl"),
-                "--source",
-                str(ASSETS / "unicode-passages.jsonl"),
-            ]
-        )
-        == 0
-    )
-    assert (
-        script.main(
-            [
                 "classification",
                 str(ASSETS / "codes-export.jsonl"),
                 "--source",

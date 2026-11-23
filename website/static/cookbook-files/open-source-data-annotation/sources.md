@@ -1,9 +1,8 @@
 # Example sources and licensing
 
-The PDF exercise uses a real institutional publication. The sentence sample,
-supplemental Unicode passages, and occupation responses are fictional teaching
-materials and contain no real respondent data. The text examples do not
-estimate the policy brief's statistics.
+The PDF exercise uses a real institutional publication. The sentence sample and
+occupation responses are fictional teaching materials and contain no real
+respondent data. The text examples do not estimate the policy brief's statistics.
 
 ## Reused publication and teaching materials
 
@@ -33,10 +32,6 @@ indicator series and a specific report cited as a source. The reference
 phrase "the labour survey" in row 7 is lowercase in the CSV's mention_text,
 while its sentence starts "The labour survey". Annotation offsets preserve
 the sentence's original capital T.
-
-The separate unicode-passages.jsonl retains the earlier composed-accent and
-emoji/combining-accent/newline cases p06 and p07. These are constructed
-verification inputs, not additional sentences from the Data Use sample.
 
 The response texts and source IDs are selected from the existing fictional
 AI4Data occupation-coding example. Its reference codes, model suggestions,
@@ -74,11 +69,10 @@ the Shona policy brief. It contains one 12-page task with Figure and Table
 results on page index 3 and retains the publisher's original download filename
 in source_file.
 
-The doccano files entities-export.jsonl and unicode-export.jsonl were captured
-on November 18, 2026. They contain 14 records with 12 spans and two records
-with two spans, respectively. The occupation file codes-export.jsonl was
-captured on November 12, 2026. Their teaching labels were entered through
-the APIs and exported using doccano's native exporter. JSONL bytes were
+The doccano file `entities-export.jsonl` was captured on November 18, 2026.
+It contains 14 records with 12 spans. The occupation file `codes-export.jsonl`
+was captured on November 12, 2026. Teaching labels were entered through the
+APIs and exported using doccano's native exporter. JSONL bytes were
 extracted from the archives without rewriting the records. These examples
 demonstrate the export representation; they do not certify annotation quality.
 
