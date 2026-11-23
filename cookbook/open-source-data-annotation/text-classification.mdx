@@ -1,50 +1,47 @@
 ---
-id: response-classification
-title: "3. Text classification and statistical coding"
-sidebar_label: "3. Statistical coding"
+id: text-classification
+title: "3. Text classification"
+sidebar_label: "3. Text classification"
 sidebar_position: 3
-description: This chapter installs doccano independently, assigns one occupation category to each fictional survey response, and verifies the native JSONL output.
+description: Use doccano to assign and review a single category for each text record and verify the labels in a native JSONL export.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
 import Checklist from '@site/src/components/Cookbook/Checklist';
 
-# 3. Text classification and statistical coding
+# 3. Text classification
 
-**Question:** How can free-text responses be classified and reviewed using a defined set of categories?
+**Question:** How can text records be classified and reviewed using a defined set of categories?
 
 ## Rationale
 
-An occupation response describes work in a respondent's own words. Statistical
-coding assigns a category from an established classification using the work
-described. Text classification applies an annotation label to the whole
-response. The label records the category assigned to that response.
+Text classification assigns categories to whole pieces of text, such as
+messages or survey responses. In a single-label project, each completed
+record receives one category.
 
-Doccano can present each response with a small list of allowed categories.
-A codebook states what those categories mean and how uncertain cases are
-handled. This chapter uses a limited subset of ISCO-08, the International
-Labour Organization's occupation classification, and ends with native JSONL.
-The chapter includes its own installation instructions and needs no other
-chapter or model-assisted coding system.
+Doccano presents the allowed categories alongside each record. Written
+labeling rules define when to use each category and how to flag uncertain
+cases for review. This chapter covers project setup, manual classification,
+and inspection of the native JSONL export.
 
 ## Target state
 
-- Each source response has exactly one saved category under the teaching codebook.
-- Responses with insufficient detail or outside the limited codebook remain visible for review.
-- Native exports preserve source identity, unchanged text, and string-valued codes.
+- Each text record has exactly one saved category under the labeling rules.
+- Records that cannot be confidently classified remain visible for review.
+- Native exports preserve source identifiers, unchanged text, and string-valued labels.
 
 ## Maturity levels
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A coder assigns categories using written definitions and retains ambiguous responses for review. |
-| **AI-ready** | Stable identifiers and validated labels allow the coded responses to enter a documented statistical workflow. |
-| **AI-native** | Reference labels could support verified automated coding with human oversight. That downstream process is outside this chapter. |
+| **Foundational** | A person assigns categories using written definitions and flags ambiguous records for review. |
+| **AI-ready** | Stable identifiers and validated labels make the classified records reusable in downstream workflows. |
+| **AI-native** | Reviewed labels can support the evaluation of automated classification. |
 
 :::info[Running example]
-The exercise uses six fictional survey responses to practice assigning
-occupation categories and flagging cases with insufficient detail. The
-responses come from the
+The exercise uses statistical coding to assign occupation categories to six
+fictional survey responses. It uses a subset of ISCO-08, the International
+Labour Organization's occupation classification. The responses come from the
 [Language Models in Production cookbook](/cookbook/language-models-in-production/coding)
 and contain no real respondent data.
 :::

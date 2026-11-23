@@ -180,8 +180,10 @@
 /cookbook/open-source-data-annotation/contributing
 /cookbook/open-source-data-annotation/dataset-mentions
 /cookbook/open-source-data-annotation/glossary
+/cookbook/open-source-data-annotation/named-entity-annotation
 /cookbook/open-source-data-annotation/response-classification
 /cookbook/open-source-data-annotation/standards
+/cookbook/open-source-data-annotation/text-classification
 /cookbook/serving-statistics-to-agents
 /cookbook/serving-statistics-to-agents/access
 /cookbook/serving-statistics-to-agents/context

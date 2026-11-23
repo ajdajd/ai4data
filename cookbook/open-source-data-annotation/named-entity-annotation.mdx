@@ -1,9 +1,9 @@
 ---
-id: dataset-mentions
+id: named-entity-annotation
 title: "2. Named entity annotation"
-sidebar_label: "2. Dataset mentions"
+sidebar_label: "2. Named entity annotation"
 sidebar_position: 2
-description: This chapter sets up doccano independently, marks dataset mentions in unchanged research passages, and verifies native JSONL spans and source identifiers.
+description: Use doccano to mark and review entity spans in text and check their character offsets in a native JSONL export.
 ---
 
 import Recipe from '@site/src/components/Cookbook/Recipe';
@@ -11,14 +11,14 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 # 2. Named entity annotation
 
-**Question:** How can dataset mentions in research text become reviewed entity spans?
+**Question:** How can entity mentions in text be marked and reviewed?
 
 ## Rationale
 
-A dataset can be mentioned by its full name, an acronym, or a description.
-Named entity annotation marks the exact part of a passage that refers to the
-data source. A span is a continuous selection of characters, with a start
-position, an end position, and an annotation label that describes the selection.
+Named entity annotation marks the words that refer to people, places,
+organizations, or other entities defined for the task. A span is a continuous
+selection of characters with a start position, an end position, and an
+annotation label.
 
 Doccano provides a sequence-labeling project for this task. It keeps the
 passage and the selected character positions together in its native export.
@@ -29,14 +29,14 @@ it does not require a model or the other chapters.
 ## Target state
 
 - Every imported passage retains a stable source identifier and unchanged text.
-- Dataset mentions follow a written inclusion policy and have been reviewed.
+- Entity spans follow written labeling rules and have been reviewed.
 - The native JSONL export reconstructs the intended text from every span.
 
 ## Maturity levels
 
 | Level | Steps |
 |---|---|
-| **Foundational** | A person marks dataset mentions and inspects the exported selected text. |
+| **Foundational** | A person marks entity mentions and checks the selected text in the export. |
 | **AI-ready** | Stable identifiers and validated offsets make the labels reusable by software. |
 | **AI-native** | A model could propose spans for human correction with provenance retained. This extension is reserved for Pass 2. |
 

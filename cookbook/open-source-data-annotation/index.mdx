@@ -3,7 +3,7 @@ id: index
 title: Practical Guide to Open-Source Data Annotation Tools
 sidebar_label: Overview
 sidebar_position: 0
-description: This cookbook helps data practitioners and statistical data curators label document regions, dataset mentions, and occupation responses with open-source tools and inspect native exports.
+description: Learn to annotate bounding boxes, mark named entities, classify text, and inspect native exports with open-source tools.
 ---
 
 # Practical Guide to Open-Source Data Annotation Tools
@@ -18,18 +18,17 @@ how to propose corrections.
 :::
 
 Data annotation assigns descriptive labels to records or selected regions,
-such as a table on a document page, a dataset name in a passage, or a survey
+such as a table on a document page, a phrase in a passage, or a whole
 response. These labels can support data curation, statistical processing,
 model development, and evaluation.
 
-This guide covers three tasks: figure/table bounding boxes with Label Studio,
-dataset-mention spans with doccano, and text classification with doccano. Each chapter contains its own
-setup, annotation, and export path.
+This guide covers bounding-box annotation with Label Studio, and named
+entity annotation and text classification with doccano. Each chapter
+includes its own setup, annotation, and export workflow.
 Readers can start with whichever chapter matches their task. No chapter is
 a prerequisite for another, and none requires model inference.
 
-The examples use native tool formats, JSON/JSONL, and a small subset of
-ISCO-08 for occupation coding. The [standards page](./standards.md)
+The examples use native JSON and JSONL exports. The [standards page](./standards.md)
 distinguishes formal standards from application-specific representations.
 Written labeling rules accompany each task so that syntactically valid
 exports can also be reviewed for their intended meaning.
@@ -63,8 +62,8 @@ Optional model-assisted annotation is reserved for a later pass.
 | Chapter | Question | Practical topics |
 |---|---|---|
 | [1. Bounding-box annotation](./bounding-boxes.mdx) | How can figures and tables in PDF documents become reviewed spatial annotations? | Multipage PDF tasks, Figure/Table rules, native JSON, coordinate units, and adapter concepts |
-| [2. Named entity annotation](./dataset-mentions.mdx) | How can dataset mentions in research text become reviewed entity spans? | Independent doccano setup, DATASET spans, unchanged text, native JSONL, and Unicode checks |
-| [3. Text classification and statistical coding](./response-classification.mdx) | How can free-text responses be classified and reviewed using a defined set of categories? | Independent doccano setup, single-label coding, ISCO subset, review cases, and native JSONL |
+| [2. Named entity annotation](./named-entity-annotation.mdx) | How can entity mentions in text be marked and reviewed? | Doccano setup, span labeling and review, character offsets, and native JSONL |
+| [3. Text classification](./text-classification.mdx) | How can text records be classified and reviewed using a defined set of categories? | Doccano setup, single-label classification, review cases, and native JSONL |
 
 ## Maturity levels
 

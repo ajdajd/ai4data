@@ -69,6 +69,4 @@ description: Terms used in the open-source-data-annotation cookbook, in plain la
 
 **Use.** A document whose analysis, decision, or statement depends on the data, as opposed to a mention that cites them as context.
 
-**Verified.** The status of an extracted value that matched a printed label, a total, a derivation, or a catalog value.
-
 **Vocabulary.** A concept scheme with preferred labels, alternates, and URIs, to which free-text keywords and topics are mapped.

@@ -1,3 +1,5 @@
 [
+  {"from": "/cookbook/open-source-data-annotation/dataset-mentions", "to": "/cookbook/open-source-data-annotation/named-entity-annotation"},
+  {"from": "/cookbook/open-source-data-annotation/response-classification", "to": "/cookbook/open-source-data-annotation/text-classification"},
   {"from": "/training/session-01/documents.html", "to": "/training/session-01/documents"}
 ]
