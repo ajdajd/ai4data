@@ -15,16 +15,19 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-Named entity annotation marks the words that refer to people, places,
-organizations, or other entities defined for the task. A span is a continuous
-selection of characters with a start position, an end position, and an
-annotation label.
+Named entity annotation marks references to people, places, organizations,
+or other entities in text. For example, a curator can label organization
+names across a collection of reports so readers can find reports that mention
+a particular organization. Labeled examples can help train models to recognize
+entity mentions beyond exact string matches and extract structured fields from
+unstructured text. The extracted entities can supply nodes for knowledge graphs,
+and their locations in the source text can help ground large language model outputs.
 
-Doccano provides a sequence-labeling project for this task. It keeps the
-passage and the selected character positions together in its native export.
-These reviewed examples can support data curation, extraction-system
-development, or quality assurance. This chapter teaches annotation and export;
-it does not require a model or the other chapters.
+Using doccano, an annotator can highlight the exact text
+of each entity and assign a label. The
+native JSONL export keeps the original text with each span's label and start
+and end character positions. The positions let a reviewer recover the selected
+text or check whether an automated extraction system finds the same mentions.
 
 ## Target state
 
@@ -66,11 +69,10 @@ mkdir -p annotation-entities/input annotation-entities/output
 cd annotation-entities
 ```
 
-2. Download [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl)
-   into `input`. Download
-   [requirements-doccano.txt](pathname:///cookbook-files/open-source-data-annotation/requirements-doccano.txt)
-   and [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
-   into the working directory. JSONL stores one JSON object per line.
+2. Download [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
+   into the working directory and
+   [passages.jsonl](pathname:///cookbook-files/open-source-data-annotation/passages.jsonl)
+   into `input`. JSONL stores one JSON object per line.
    Inspect the UTF-8 input before importing it; each record has these fields.
 
 | Field | Meaning |
@@ -86,17 +88,17 @@ an empty `label` list so that annotation begins without suggested answers.
 ```json file=../../website/static/cookbook-files/open-source-data-annotation/passages.jsonl
 ```
 
-3. Create an isolated Python 3.10 environment and install the supplied
-   dependencies, including doccano 1.8.4. The `--override` option applies the
-   compatibility versions in the requirements file. For platform-specific
-   installation help, see the
+3. Create and activate an isolated Python 3.10 environment, then install
+   doccano and the other packages listed below. This example uses `venv`
+   and pip. For platform-specific installation help, see the
    [official installation guide](https://doccano.github.io/doccano/install_and_upgrade_doccano/).
 
 ```shell
 python3.10 -m venv .venv-doccano
 source .venv-doccano/bin/activate
-python -m pip install uv
-uv pip install --python python -r requirements-doccano.txt --override requirements-doccano.txt
+python -m pip install --upgrade pip
+python -m pip install "doccano==1.8.4" "python-dotenv[cli]>=1.1,<2" \
+  "marshmallow==3.26.2" "numpy==1.26.4" "setuptools==80.9.0"
 ```
 
 ### Configure doccano
@@ -121,32 +123,31 @@ dotenv -f .env run --no-override -- \
 unset DOCCANO_PASSWORD
 ```
 
-6. Start the web application in this terminal.
+6. Start the web application and import/export worker in the background.
+   Keep this terminal open for the rest of the exercise. The web application
+   writes to `doccano-web.log` and the worker writes to `doccano-worker.log`.
 
 ```shell
-dotenv -f .env run --no-override -- doccano webserver --port 8000 --workers 1
-```
-
-   In a second terminal, enter `annotation-entities`, activate the environment,
-   and start the import/export worker. Leave both terminals running.
-
-```shell
-source .venv-doccano/bin/activate
-dotenv -f .env run --no-override -- doccano task --concurrency 1
+dotenv -f .env run --no-override -- doccano webserver --port 8000 --workers 1 \
+  > doccano-web.log 2>&1 &
+doccano_web_pid=$!
+dotenv -f .env run --no-override -- doccano task --concurrency 1 \
+  > doccano-worker.log 2>&1 &
+doccano_worker_pid=$!
 ```
 
 7. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and log in as `annotator`
-   with the password from Step 5. On the project list, click **Create**.
-   Name the project `Data Use sentence annotation` and choose
-   **Sequence Labeling**. Leave overlapping entities, grapheme mode, and
-   relation annotation disabled, then save the project. Open **Labels** in the
-   project menu and add `DATASET`. For another use case, choose the label names
+   with the password from Step 5.
+8. On the project list, click **Create**.
+   choose **Sequence Labeling** and name the project `Data Use sentence annotation`. Add the project description `Sample exercise`. Leave other settings unchecked, then save the project. 
+9. Open **Labels** in the project menu. Click **Actions** then select **Create Label**. Add `DATASET`
+   then click **Save**. For another use case, choose the label names
    that describe the entities to mark.
-8. Open **Dataset → Actions → Import Dataset**. Choose **JSONL** and select
+10. Open **Dataset → Actions → Import Dataset**. Choose **JSONL** and import
    `input/passages.jsonl`. Set the text column to `text` and the label column
-   to `label`, then import the file. Expect 14 records. Click
-   **Start annotation** to open the first sentence. Its metadata should include
-   `source_id: m01`, and the label list should offer `DATASET`.
+   to `label`, then import the file. Expect 14 records.
+11. Click **Start annotation** to open the first sentence. At the right hand side, the metadata should
+   include `source_id: m01`, and the label list should offer `DATASET`.
 
 **Worked example.** Record `m01` contains “We use the Household Budget
 Survey 2021 to estimate consumption per adult equivalent.” Record `m14`
@@ -211,7 +212,7 @@ the exported sentences still match the input.
    **JSONL**, and include the complete reviewed set. Extract the download
    archive if necessary. Save the annotator's JSONL in `output` as
    `entities-export.jsonl`. Keep the native file unchanged, including its metadata.
-2. In a terminal in `annotation-entities`, run the inspection script. It prints
+2. In the same terminal, run the inspection script. It prints
    each selected phrase on its own line for easier inspection.
 
 ```shell
@@ -310,7 +311,7 @@ and combining accents, a leading emoji, and a newline. Download it into
 `input`. Import these two records into a separate sequence-labeling project
 with the same settings.
 Label exactly `Labour Force Survey` in each, confirm both records, and export
-to `output/unicode-export.jsonl`. Then run from `annotation-entities`:
+to `output/unicode-export.jsonl`. Then run the following command in the same terminal.
 
 ```shell
 python inspect_doccano.py entities output/unicode-export.jsonl \
@@ -320,6 +321,16 @@ python inspect_doccano.py entities output/unicode-export.jsonl \
 Use the [Unicode example export](pathname:///cookbook-files/open-source-data-annotation/unicode-export.jsonl)
 to inspect the expected offsets. Compare the browser's saved highlights with
 `text[start:end]` in the export. Keep the source text unchanged.
+
+### Stop doccano
+
+After completing the exercise and any optional Unicode checks, stop the web
+application and worker from the same terminal.
+
+```shell
+kill "$doccano_web_pid" "$doccano_worker_pid"
+wait "$doccano_web_pid" "$doccano_worker_pid"
+```
 
 ## Checklist
 
