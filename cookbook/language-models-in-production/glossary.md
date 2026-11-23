@@ -13,6 +13,8 @@ description: Terms used in the Practical Guide to Language Models in Statistical
 
 **AI-use policy.** The one-page statement, approved at the top of the organization, of which tasks a model may assist, which uses are prohibited, which controls apply, and who owns each instrument.
 
+**Annotation.** Optional properties on a tool that describe its behaviour (for example that it is read-only); hints that clients treat as untrusted unless the server is trusted.
+
 **Automated share.** The share of responses coded at or above the confidence threshold without a coder; measured by a re-coded sample each round.
 
 **Candidate.** A model shortlisted for a task, with its licence classified and its card checked, to be run on the suite.
@@ -24,6 +26,8 @@ description: Terms used in the Practical Guide to Language Models in Statistical
 **Confidence threshold.** The model confidence above which a code is accepted automatically, set from the measured accuracy curve.
 
 **Coverage.** The share of a reference list of known uses that the collected documents contain.
+
+**Data annotation.** The assignment of reviewed labels to data records or selected regions, such as document bounding boxes, text spans, or survey responses. This qualified term distinguishes data labeling from annotations that describe software tools.
 
 **DDI.** The Data Documentation Initiative, the standard for documenting surveys and their variables, value labels, and files; the World Bank microdata schema is based on it.
 

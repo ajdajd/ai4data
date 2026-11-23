@@ -35,6 +35,8 @@ description: Terms used in the Practical Guide to Evaluation Suites for Statisti
 
 **Coverage.** The share of a reference list of known uses that the collected documents contain.
 
+**Data annotation.** The assignment of reviewed labels to data records or selected regions, such as document bounding boxes, text spans, or survey responses. This qualified term distinguishes data labeling from annotations that describe software tools.
+
 **DDI.** The Data Documentation Initiative, the standard for documenting surveys and their variables, value labels, and files; the World Bank microdata schema is based on it.
 
 **Decision.** A curator's recorded verdict on a suggestion: accept, edit (with the final text), or reject (with a reason).

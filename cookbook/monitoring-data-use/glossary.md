@@ -37,6 +37,8 @@ description: Terms used in the Practical Guide to Monitoring Data Use.
 
 **Crosswalk.** A mapping from one classification to another, for example from a national occupation classification to ISCO.
 
+**Data annotation.** The assignment of reviewed labels to data records or selected regions, such as document bounding boxes, text spans, or survey responses. This qualified term distinguishes data labeling from annotations that describe software tools.
+
 **DataCite.** The registration agency and metadata schema for dataset DOIs. The World Bank Microdata Library assigns DataCite DOIs.
 
 **DDI.** The Data Documentation Initiative, the standard for documenting surveys and their variables, value labels, and files; the World Bank microdata schema is based on it.
