@@ -15,14 +15,16 @@ import Checklist from '@site/src/components/Cookbook/Checklist';
 
 ## Rationale
 
-Text classification assigns categories to whole pieces of text, such as
-messages or survey responses. In a single-label project, each completed
-record receives one category.
+Text classification assigns categories to whole messages, documents, or
+survey responses. For example, grouping open-ended feedback by topic helps
+a team see which concerns come up most often and decide which need follow-up.
+Reviewed labels can also serve as training examples or as reference answers
+for evaluating an automated classifier.
 
-Doccano presents the allowed categories alongside each record. Written
-labeling rules define when to use each category and how to flag uncertain
-cases for review. This chapter covers project setup, manual classification,
-and inspection of the native JSONL export.
+In the single-label project used in this chapter, doccano shows each record
+alongside the available categories so the annotator can select one. Its native
+JSONL export keeps that choice with the original text and source identifier,
+so a reviewer can check the classification against the source record.
 
 ## Target state
 
@@ -134,18 +136,31 @@ doccano_worker_pid=$!
 ```
 
 7. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and log in as `annotator`
-   with the password from Step 5. On the project list, click **Create**.
-   Name the project `Labour survey occupation coding` and choose
-   **Text Classification**. Enable **Single label**, then save the project.
-   Open **Labels** in the project menu and add the five values from the
-   codebook's `code` column, including `NEEDS_REVIEW`. Use the exact values
-   so that the exported labels can be checked against the codebook. For
-   another classification task, replace these with the applicable categories.
-8. Open **Dataset → Actions → Import Dataset**. Choose **JSONL** and select
-   `input/responses.jsonl`. Set the text column to `text` and the label column
-   to `label`, then import the file. Expect six records. Click
-   **Start annotation** to open the first response. Its metadata should include
-   `source_id: r01`, and the label list should offer the five codebook categories.
+   with the password from Step 5.
+
+8. On the project list, click **Create**.
+   choose **Text Classification** and name the project `Labour survey occupation coding`. Add the project description `Sample exercise`. Check **Allow single label** and create the project.
+9. Open `input/occupation-codebook.csv` and find the `code` column. In doccano,
+   open **Labels** in the project menu. For each value below, choose
+   **Actions → Create Label**, enter the value exactly as shown, and click
+   **Save**.
+
+   ```text
+   2341
+   8322
+   5211
+   7231
+   NEEDS_REVIEW
+   ```
+
+   Using these exact values lets the inspection script check exported labels
+   against the codebook.
+10. Open **Dataset → Actions → Import Dataset**. Choose **JSONL** and select
+    `input/responses.jsonl`. Set the data column to `text` and the label column
+    to `label`, then import the file. When six records appear in the **Dataset**
+    table, find the row with `"source_id": "r01"` in the **Metadata** column.
+    Click **Annotate** on that row. Check that the annotation view shows `r01`
+    and offers all five codebook labels.
 
 After finishing Recipes 3.2 and 3.3, stop the web application and worker from
 the same terminal.
@@ -179,21 +194,19 @@ occupation categories.
 ```csv file=../../website/static/cookbook-files/open-source-data-annotation/occupation-codebook.csv
 ```
 
-1. In the annotation interface, find `source_id: r01` in the record metadata.
-   Read “primary school teacher” and click `2341` in the category list. Expect
-   one selected category. Click the review indicator (initially **×**) in
-   the annotation toolbar. It should change to **✓**, marking the response
-   as reviewed.
-2. Use the navigation arrows to continue. Assign `8322` to `r02`, which
-   describes driving a taxi, `5211` to `r03`, which describes selling
-   vegetables at a market, and `7231` to `r06`, which describes repairing
-   motorcycles. Confirm each response after labeling it.
+1. In the annotation interface, verify that you are in the first record and the metadata shows `source_id: r01`.
+2. Read “primary school teacher” and click `2341` in the category list. Click the **×** button in the toolbar
+   and confirm it changes from **×** to **✓** to save the annotation.
+2. Use the navigation arrows to continue. Assign the following and save each after labeling it:
+    - `8322` to `r02`, which describes driving a taxi,
+    - `5211` to `r03`, which describes selling vegetables at a market,
+    - and `7231` to `r06`, which describes repairing motorcycles.
 3. Assign `NEEDS_REVIEW` to `r07`, “works in a shop”, and `r14`, “helps at
    home”. Neither response provides enough detail to support one of the four
    occupation categories. Confirm both responses; the review label keeps
    them visible for later follow-up.
 4. To correct a category, click the supported label to replace the previous
-   selection. Check that the review indicator shows **✓**, navigate away,
+   selection. Ensure that the review indicator shows **✓**, navigate away,
    and return to check that exactly one category remains selected.
 
 **Worked example.** The teaching decisions are `r01 → 2341`, `r02 → 8322`,
@@ -212,14 +225,13 @@ response context, and procedures for clarification and adjudication.
 **Result:** Native doccano JSONL retains each response identifier and exactly one permitted string label.
 
 The native JSONL representation keeps the response text beside its category
-list. Even in a single-label project, `label` is a list such as `["2341"]`.
-A stable source identifier allows the label to be joined to the source survey
+list. A stable source identifier allows the label to be joined to the source survey
 record without relying on the application's internal IDs or row order.
 
-1. Use **Actions → Export Dataset** and select **JSONL** for the complete
-   reviewed set. Extract the archive if necessary and save the annotator's
-   file in `output` as `codes-export.jsonl`. Keep the native file unchanged.
-2. Download [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
+1. In the sidebar, go to **Dataset**. Use **Actions → Export Dataset** and choose **JSONL**. Leave **Export only approved documents** unchecked to include all records. Click **Export**.
+2. Extract the download archive and save the
+   annotator's JSONL in `output` as `codes-export.jsonl`. Keep the native file unchanged, including its metadata.
+3. Download [inspect_doccano.py](pathname:///cookbook-files/open-source-data-annotation/inspect_doccano.py)
    into `annotation-codes`. In the same terminal, run the script to display
    each response identifier and its assigned category.
 
